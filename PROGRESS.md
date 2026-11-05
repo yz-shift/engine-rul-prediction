@@ -2,6 +2,13 @@
 
 > 进度日志。新的写在最上面；只追加，不删改旧记录。
 
+## 2026-11-05 20:48 · T-005 · 完成
+- 做了：新增 models.py（Pipeline：方差筛选 + 标准化 + 线性回归）、evaluate.py（交叉验证、官方测试评估）、experiments.py（实验配置，训练脚本、notebook、界面共用）、scripts/train_models.py（指标写入 results/）。两种标签的基线结果：截顶 125 为 CV 临近故障 RMSE 21.18 ± 1.73、官方测试 RMSE 21.90、分数 1314；不截顶为 CV 33.98 ± 4.76、官方测试 RMSE 31.90、分数 13221
+- 改了：src/rul/models.py、src/rul/evaluate.py、src/rul/experiments.py、scripts/train_models.py、tests/test_evaluate.py、results/、TASKS.md
+- 验证：pytest 36 个全过；CV 指标和官方测试结果写入 results/*.json 与 summary.csv；CV 与官方测试 RMSE 接近（21.18 对 21.90）
+- 问题：第一版 CV 按测试集轨迹长度随机截断验证发动机，得到 CV RMSE 39、分数约 28 万，和测试集差很多。用训练发动机查明：模拟 RUL 最高到 313，25% 大于 125，单点罚分可达 70 万，分数被极端点主导。改为只统计真实 RUL <= 125 的周期。这次改动是看到测试结果后做的，但只改了验证指标，没有改模型或参数。另外，全周期 RMSE 上不截顶反而更好（44.11 对 51.76），因为截顶模型不会预测超过 125，这是“临近故障”指标和全周期指标的取舍，需要在 README 里说明
+- 下一步：T-006 随机森林 + LightGBM + 滑动窗口特征
+
 ## 2026-11-05 20:43 · T-004 · 完成
 - 做了：data.py 增加 add_rul（支持截顶）和 engine_folds（按发动机的 GroupKFold，种子固定）；新增 metrics.py（rmse、官方 nasa_score）；01_eda 改用共用的 add_rul，去掉重复逻辑；安装 scikit-learn（scipy 随之装上）
 - 改了：src/rul/data.py、src/rul/metrics.py、tests/test_metrics.py、tests/test_labels_and_folds.py、notebooks/01_eda.ipynb、pyproject.toml、requirements-lock.txt、TASKS.md

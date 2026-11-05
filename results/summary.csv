@@ -1,0 +1,3 @@
+model,features,cap,cv_rmse_near_failure,cv_rmse_near_failure_std,cv_rmse_all_cycles,cv_score_per_100,test_rmse,test_score
+linear_regression,raw,125,21.18,1.73,51.76,1183.57,21.9,1313.99
+linear_regression,raw,none,33.98,4.76,44.11,16794.3,31.9,13220.74
