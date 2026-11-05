@@ -2,6 +2,13 @@
 
 > 进度日志。新的写在最上面；只追加，不删改旧记录。
 
+## 2026-11-05 21:18 · T-008 · 完成
+- 做了：写 README（简介、截图、结果表、提升来源、数据发现、预警线、技术栈、运行方法、设计取舍、踩过的坑、局限、数据出处和许可证）；修正 download_data.py 里无法核实的来源注释
+- 改了：README.md、scripts/download_data.py、TASKS.md、PROGRESS.md
+- 验证：README 的结果数字逐项对照 results/summary.csv 和 notebook 输出；用当前代码的干净副本和全新虚拟环境按 README 跑通：安装、下载数据（13 个文件）、pytest 73 个全过、重跑全部实验后 results/ 差异 0 行、Streamlit 启动健康检查返回 200
+- 问题：未验证：传感器名称表和评分函数没有对照 Saxena 2008 原文，NASA 的页面和 PDF 用抓取和内置浏览器都打不开，只核对了转引论文，README 已写明。数据集许可证未能确认：data.gov 记录没有明确条款，所以仓库不分发数据，README 已写明。之前说下载地址是“NASA 页面链接的”也没有核实，已改掉注释。代码本身的许可证还没选，README 也还是中文，等我决定。第一次干净副本验证因 tar 把 C: 当成远程主机而没有实际执行，修好后重跑才通过
+- 下一步：全部开发任务完成。git push 需要我同意；开新会话做 T-999 面试演练
+
 ## 2026-11-05 21:14 · T-007 · 完成
 - 做了：新增 Streamlit 界面（选测试发动机、预警线滑块、传感器多选、预测和真实 RUL 曲线、维修提示、指标），默认阈值 40 来自训练集交叉验证外预测；预测逻辑放在 src/rul/inference.py；支持 ?engine=34 链接；AGENTS.md 第 2 节填入运行命令；安装 streamlit
 - 改了：app/streamlit_app.py、src/rul/inference.py、tests/test_inference.py、docs/app_alert.png、docs/app_healthy.png、AGENTS.md、.gitignore、pyproject.toml、requirements-lock.txt、TASKS.md

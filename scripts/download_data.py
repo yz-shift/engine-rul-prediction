@@ -13,7 +13,7 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
-# NASA Prognostics Center of Excellence 数据库页面链接的下载地址
+# C-MAPSS 压缩包的公开下载地址，压缩包内的 readme 引用 Saxena et al. 2008
 URL = (
     "https://phm-datasets.s3.amazonaws.com/NASA/"
     "6.+Turbofan+Engine+Degradation+Simulation+Data+Set.zip"
