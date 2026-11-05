@@ -5,12 +5,14 @@
 只展示官方测试集的发动机：模型只用训练集的 100 台拟合，这些发动机它没见过。
 """
 
+import json
+
 import altair as alt
 import pandas as pd
 import streamlit as st
 
 from rul.data import DEFAULT_DATA_DIR, N_CONDITIONS, SENSOR_COLUMNS, SUBSETS, load_rul, load_trajectories
-from rul.experiments import RESULTS_DIR, best_experiment, fit_final
+from rul.experiments import FINAL_FILE, RESULTS_DIR, best_experiment, fit_final
 from rul.inference import engine_index, first_alert_cycle, needs_maintenance, predict_engine
 
 # 默认阈值来自 02_modeling 第 4 节：训练集交叉验证外预测中，阈值 40 时第一次预警最晚还剩 26 周期。
@@ -48,11 +50,8 @@ def load_model(subset: str):
 
 
 @st.cache_data
-def load_test_metrics(subset: str, experiment_name: str) -> tuple[float, float]:
-    summary = pd.read_csv(RESULTS_DIR / subset / "summary.csv", keep_default_na=False)
-    summary["name"] = summary["model"] + "__" + summary["features"] + "__cap_" + summary["cap"].astype(str)
-    row = summary.set_index("name").loc[experiment_name]
-    return float(row["cv_rmse_near_failure"]), float(row["test_rmse"])
+def load_final_metrics(subset: str) -> dict:
+    return json.loads((RESULTS_DIR / subset / FINAL_FILE).read_text(encoding="utf-8"))
 
 
 def rul_chart(trajectory: pd.DataFrame, threshold: float) -> alt.LayerChart:
@@ -153,7 +152,7 @@ def main() -> None:
 
     fitted, table, true_rul = load_model(subset)
     experiment, model, columns = fitted.experiment, fitted.model, fitted.columns
-    cv_rmse, test_rmse = load_test_metrics(subset, experiment.name)
+    final = load_final_metrics(subset)
 
     with st.sidebar:
         units = sorted(table["unit"].unique())
@@ -178,7 +177,9 @@ def main() -> None:
         st.divider()
         st.caption(
             f"模型：`{experiment.name}`，只用训练发动机拟合。"
-            f"交叉验证 RMSE {cv_rmse:.1f} 周期，官方测试集 RMSE {test_rmse:.1f} 周期。"
+            f"RUL ≤ 125 时，交叉验证 RMSE {final['cv']['rmse_near_failure']:.1f} 周期，"
+            f"官方测试集 RMSE {final['test']['rmse_near_failure']:.1f} 周期；"
+            f"测试集全部发动机 RMSE {final['test']['rmse']:.1f} 周期。"
         )
 
     trajectory = predict_engine(model, table, columns, unit, int(true_rul.loc[unit]))

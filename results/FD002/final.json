@@ -1,0 +1,65 @@
+{
+  "subset": "FD002",
+  "seed": 42,
+  "model": "lightgbm_asymmetric",
+  "features": "condition_window",
+  "cap": 125,
+  "window": 50,
+  "model_params": {
+    "n_estimators": 600,
+    "learning_rate": 0.0171,
+    "num_leaves": 63,
+    "min_child_samples": 10,
+    "subsample": 0.7126,
+    "colsample_bytree": 0.5762,
+    "reg_lambda": 0.9677,
+    "late_weight": 5
+  },
+  "tag": "final",
+  "params_source": "tuned",
+  "late_weight": 5,
+  "weights": [
+    {
+      "late_weight": 1,
+      "rmse_near_failure": 13.8763,
+      "rmse_all_cycles": 47.2031,
+      "score_per_100": 397.322
+    },
+    {
+      "late_weight": 1.5,
+      "rmse_near_failure": 13.5649,
+      "rmse_all_cycles": 47.442,
+      "score_per_100": 360.3874
+    },
+    {
+      "late_weight": 2,
+      "rmse_near_failure": 13.3559,
+      "rmse_all_cycles": 47.6398,
+      "score_per_100": 335.4477
+    },
+    {
+      "late_weight": 3,
+      "rmse_near_failure": 13.1989,
+      "rmse_all_cycles": 47.933,
+      "score_per_100": 309.4438
+    },
+    {
+      "late_weight": 5,
+      "rmse_near_failure": 13.0352,
+      "rmse_all_cycles": 48.3561,
+      "score_per_100": 282.8944
+    }
+  ],
+  "cv": {
+    "rmse_near_failure": 13.0352,
+    "rmse_all_cycles": 48.3561,
+    "score_per_100": 282.8944
+  },
+  "test": {
+    "rmse": 25.9192,
+    "score": 7078.2873,
+    "rmse_near_failure": 12.0027,
+    "n_engines": 259,
+    "n_above_near_failure": 57
+  }
+}

@@ -2,6 +2,13 @@
 
 > 进度日志。新的写在最上面；只追加，不删改旧记录。
 
+## 2026-11-05 23:53 · T-011 · 完成
+- 做了：新增 asymmetric.py（报晚加权的平方损失、LateWeightedLightGBM、事先定好的决策规则）和 scripts/tune_asymmetric.py；比较权重 1、1.5、2、3、5，确定每个子集的最终模型写入 results/*/final.json；界面改读 final.json。按规则四个子集都采用权重 5
+- 改了：src/rul/asymmetric.py、src/rul/models.py、scripts/tune_asymmetric.py、tests/test_asymmetric.py、results/*/final.json、app/streamlit_app.py、TASKS.md
+- 验证：pytest 全过，覆盖目标函数手算、数值梯度、权重 1 和普通平方损失等价、权重变大预测变低；测试集（RUL <= 125）RMSE 四个子集都变好：FD001 12.68 到 12.48，FD002 12.71 到 12.00，FD003 13.56 到 11.38，FD004 13.98 到 13.06
+- 问题：代价是官方总指标不一定变好。全部发动机 RMSE：FD001 13.20 到 13.63，FD002 24.42 到 25.92，FD003 14.62 到 14.28，FD004 25.43 到 26.65；官方分数：FD001 270 到 257，FD002 4845 到 7078，FD003 432 到 314，FD004 4015 到 5014。原因是预测被整体压低，RUL > 125 的发动机被低估得更多，而 CV 指标看不到这部分。规则是看结果前定的，本项目关心临近故障的维修决策，所以不因测试结果推翻规则，只如实记录。局限：权重 5 是候选范围的边界
+- 下一步：T-012 Codex 评审
+
 ## 2026-11-05 23:51 · T-010 · 完成
 - 做了：新增 tuning.py（随机搜索 20 组、嵌套 CV：外层 5 折、内层 3 折）和 scripts/tune_models.py；搜索窗口长度和 7 个 LightGBM 参数，截顶固定 125；另外报告不同截顶的 CV 取舍。嵌套 CV 相比默认：FD001 14.04 到 11.94，FD002 16.46 到 13.90，FD003 14.16 到 12.75，FD004 16.55 到 14.62，都是 5/5 折更好。官方测试 RMSE：FD001 14.57 到 13.20，FD002 26.51 到 24.42，FD003 15.39 到 14.62，FD004 26.60 到 25.43
 - 改了：src/rul/tuning.py、scripts/tune_models.py、tests/test_tuning.py、results/*/tuning.json、TASKS.md
