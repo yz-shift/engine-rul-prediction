@@ -2,6 +2,13 @@
 
 > 进度日志。新的写在最上面；只追加，不删改旧记录。
 
+## 2026-11-06 03:55 · T-012 · 完成
+- 做了：Codex 评审三轮结束。第一轮 9 条（2 条严重）全部采纳；第二轮没有严重问题，4 条全部采纳；第三轮确认修复到位，没有新问题。评审原文和每条的处理结论都写在 docs/review/
+- 改了：docs/review/codex_round3.md、TASKS.md
+- 验证：逐条对照验收：评审写进 docs/；每条都有结论；复审没有严重问题。pytest 116 个全过
+- 问题：Codex 的沙箱跑不了 pytest，也没有重新训练，所以它的结论只来自读代码和已保存的数字。results/*/tuning.json 的搜索记录还是旧格式，正在干净副本重跑，放到 T-013 更新
+- 下一步：T-013
+
 ## 2026-11-06 03:40 · T-012 · 进行中
 - 做了：Codex 第二轮复审没有严重问题，有 1 项中等、3 项低严重度问题，全部采纳并修复：回退到权重 1 时记录真正返回模型的成绩；搜索记录的参数不再取整；补外层最终拟合的泄漏测试；窗口和参数分开断言；改掉“可以直接比较”的说法
 - 改了：src/rul/tuning.py、evaluate.py、scripts/tune_models.py、tests/test_tuning.py、tests/test_alerts_and_results.py、docs/review/codex_round2.md、TASKS.md
