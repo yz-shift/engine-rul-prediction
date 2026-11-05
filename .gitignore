@@ -7,3 +7,4 @@ __pycache__/
 .env
 # 原始数据不进 git，用 scripts/download_data.py 下载
 data/
+.claude/

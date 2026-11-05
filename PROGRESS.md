@@ -2,7 +2,14 @@
 
 > 进度日志。新的写在最上面；只追加，不删改旧记录。
 
-## 2026-11-05 21:12 · T-006 · 完成
+## 2026-11-05 21:14 · T-007 · 完成
+- 做了：新增 Streamlit 界面（选测试发动机、预警线滑块、传感器多选、预测和真实 RUL 曲线、维修提示、指标），默认阈值 40 来自训练集交叉验证外预测；预测逻辑放在 src/rul/inference.py；支持 ?engine=34 链接；AGENTS.md 第 2 节填入运行命令；安装 streamlit
+- 改了：app/streamlit_app.py、src/rul/inference.py、tests/test_inference.py、docs/app_alert.png、docs/app_healthy.png、AGENTS.md、.gitignore、pyproject.toml、requirements-lock.txt、TASKS.md
+- 验证：一条命令启动；内置浏览器实测：1 号发动机显示运行正常（预测 113、真实 112），选 34 号转为维修提示（预测 8、真实 7，第 152 周期首次触发），滑块调到 10 后首次触发变为第 203 周期，?engine=34 能直接打开，控制台无错误；AppTest 自动化界面测试和 pytest 全过（73 个）；无头 Edge 生成截图
+- 问题：预警有时会反复：34 号发动机第 152 周期触发后，第 180 周期前后预测短暂回到预警线之上。界面用“需要留意”状态提示这种情况，没有做平滑。此外更正 T-006 日志时间（写成 21:12，实际 21:07）
+- 下一步：T-008 README
+
+## 2026-11-05 21:07 · T-006 · 完成
 - 做了：新增 features.py（窗口 30 的均值、标准差、斜率，只看过去、不跨发动机）；models.py 加随机森林和 LightGBM（参数事先定好，没有搜索）；跑 14 组实验（含 Nc/NRc 和全部列两组特征对照）；写 notebooks/02_modeling.ipynb（对比表、配对比较、种子波动、测试集误差、预警提前量、特征重要性）。按 CV 选出 LightGBM + 窗口 + 截顶 125：CV 14.04 ± 0.82，测试 RMSE 14.57、分数 308.7；基线是 21.90、1314
 - 改了：src/rul/features.py、src/rul/models.py、src/rul/experiments.py、scripts/train_models.py、tests/test_features.py、tests/test_experiments.py、notebooks/02_modeling.ipynb、results/、pyproject.toml、requirements-lock.txt、TASKS.md
 - 验证：pytest 全部通过（含真实数据上窗口特征恰好 56 列）；实验连续跑两遍，results/ 差异 0 行；notebook 从头跑通；图表和结论数字已对照输出
