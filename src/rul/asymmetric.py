@@ -6,8 +6,10 @@
 为什么不直接优化官方评分：它是指数函数，大误差处梯度爆炸，训练很不稳定，而且分数会
 被个别样本主导。加权平方损失更稳定，只有一个参数，也容易解释。
 
-决策规则（看结果之前定好）：在 late_weight > 1 的候选中选 CV 官方分数最低的；只有分数
-比 late_weight = 1 低至少 10%，且临近故障 RMSE 上升不超过 5%，才采用。
+决策规则：候选必须满足分数比 late_weight = 1 低至少 10%，且临近故障 RMSE 上升不超过 5%；
+在满足条件的候选中选 CV 官方分数最低的，没有候选满足时不用不对称损失。
+
+规则的局限：两个指标都只统计 RUL <= 125，看不到健康阶段被低估的代价。
 """
 
 import numpy as np
@@ -34,6 +36,9 @@ class LateWeightedLightGBM(RegressorMixin, BaseEstimator):
 
     LightGBM 使用自定义目标时不会从标签均值开始提升，而是从 0 开始。这里先减去标签
     均值，预测时再加回来，让 late_weight = 1 时和普通平方损失等价。
+
+    开启列抽样时，自定义目标下的随机流和普通 LightGBM 不同，预测逐点不相等，只是误差水平
+    相同。所以比较权重时要以这个类的 late_weight = 1 为基线。
     """
 
     def __init__(
@@ -87,8 +92,11 @@ class LateWeightedLightGBM(RegressorMixin, BaseEstimator):
 def choose_late_weight(table: list[dict]) -> float:
     """按文件开头的决策规则选权重。table 的每行有 late_weight、score_per_100、rmse_near_failure。"""
     baseline = next(row for row in table if row["late_weight"] == 1)
-    candidates = [row for row in table if row["late_weight"] > 1]
-    best = min(candidates, key=lambda row: row["score_per_100"])
-    score_is_better = best["score_per_100"] <= baseline["score_per_100"] * (1 - MIN_SCORE_IMPROVEMENT)
-    rmse_is_acceptable = best["rmse_near_failure"] <= baseline["rmse_near_failure"] * (1 + MAX_RMSE_INCREASE)
-    return best["late_weight"] if score_is_better and rmse_is_acceptable else 1.0
+    max_score = baseline["score_per_100"] * (1 - MIN_SCORE_IMPROVEMENT)
+    max_rmse = baseline["rmse_near_failure"] * (1 + MAX_RMSE_INCREASE)
+    acceptable = [
+        row
+        for row in table
+        if row["late_weight"] > 1 and row["score_per_100"] <= max_score and row["rmse_near_failure"] <= max_rmse
+    ]
+    return min(acceptable, key=lambda row: row["score_per_100"])["late_weight"] if acceptable else 1.0

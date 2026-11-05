@@ -73,6 +73,43 @@ def test_adopts_weight_when_score_improves_enough_and_rmse_barely_moves():
     assert choose_late_weight(table) == 2
 
 
+def test_skips_a_better_score_that_fails_the_rmse_limit():
+    # 权重 5 分数最好但 RMSE 超限，应选仍然合格的权重 2，而不是退回基线
+    table = [_row(1, 1000, 20.0), _row(2, 850, 20.5), _row(5, 700, 22.0)]
+    assert choose_late_weight(table) == 2
+
+
+def test_weight_one_with_row_sampling_is_identical_to_lightgbm(regression_data):
+    X, y = regression_data
+    params = {"n_estimators": 60, "learning_rate": 0.05, "num_leaves": 15, "subsample": 0.7, "subsample_freq": 1}
+    ours = LateWeightedLightGBM(late_weight=1.0, colsample_bytree=1.0, **params).fit(X, y).predict(X)
+    standard = (
+        LGBMRegressor(colsample_bytree=1.0, random_state=42, deterministic=True, force_row_wise=True, verbose=-1, **params)
+        .fit(X, y)
+        .predict(X)
+    )
+    assert ours == pytest.approx(standard, abs=1e-4)
+
+
+def test_weight_one_with_column_sampling_differs_only_by_random_stream(regression_data):
+    # 使用自定义目标时，LightGBM 列抽样的随机流不同，逐点不相等，但留出误差应该基本相同。
+    # 所以比较不对称权重时，基线必须用这个包装器的权重 1，而不是普通 LightGBM。
+    X, y = regression_data
+    train, held_out = np.arange(1000), np.arange(1000, 1500)
+    params = {"n_estimators": 60, "learning_rate": 0.05, "num_leaves": 15, "colsample_bytree": 0.6}
+
+    def held_out_rmse(model):
+        predictions = model.fit(X[train], y[train]).predict(X[held_out])
+        return np.sqrt(np.mean((predictions - y[held_out]) ** 2))
+
+    ours = [held_out_rmse(LateWeightedLightGBM(late_weight=1.0, random_state=s, **params)) for s in range(5)]
+    standard = [
+        held_out_rmse(LGBMRegressor(random_state=s, deterministic=True, force_row_wise=True, verbose=-1, **params))
+        for s in range(5)
+    ]
+    assert np.mean(ours) == pytest.approx(np.mean(standard), abs=0.3)
+
+
 def test_keeps_symmetric_loss_when_score_gain_is_small():
     assert choose_late_weight([_row(1, 1000, 20.0), _row(2, 950, 20.0)]) == 1.0
 

@@ -8,12 +8,16 @@ from pathlib import Path
 DECIMALS = 4
 
 
+# 这些键下面是模型配置，之后会被读回来训练，绝不能四舍五入，否则结果对应的就不是这组配置。
+EXACT_KEYS = frozenset({"model_params", "chosen_per_fold"})
+
+
 def rounded(value):
-    """递归把结果里的浮点数四舍五入。"""
+    """递归把结果里的指标四舍五入，模型配置保持原样。"""
     if isinstance(value, float):
         return round(value, DECIMALS)
     if isinstance(value, dict):
-        return {k: rounded(v) for k, v in value.items()}
+        return {k: v if k in EXACT_KEYS else rounded(v) for k, v in value.items()}
     if isinstance(value, (list, tuple)):
         return [rounded(v) for v in value]
     return value

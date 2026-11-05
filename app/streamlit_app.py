@@ -15,7 +15,7 @@ from rul.data import DEFAULT_DATA_DIR, N_CONDITIONS, SENSOR_COLUMNS, SUBSETS, lo
 from rul.experiments import FINAL_FILE, RESULTS_DIR, best_experiment, fit_final
 from rul.inference import engine_index, first_alert_cycle, needs_maintenance, predict_engine
 
-# 默认阈值来自 02_modeling 第 4 节：训练集交叉验证外预测中，阈值 40 时第一次预警最晚还剩 26 周期。
+# 各子集的预警表现见 results/<子集>/final.json 的 alerts_nested，都来自留出发动机的预测。
 DEFAULT_THRESHOLD = 40
 
 SENSOR_NAMES = {
@@ -45,8 +45,9 @@ ALERT_COLOR = "#8f8e88"
 def load_model(subset: str):
     """拟合最终模型并算好测试集特征。缓存后切换发动机不用重新训练。"""
     fitted = fit_final(best_experiment(subset), load_trajectories(subset, "train"))
-    table, _ = fitted.featurizer.transform(load_trajectories(subset, "test"))
-    return fitted, table, load_rul(subset)
+    raw = load_trajectories(subset, "test")
+    table, _ = fitted.featurizer.transform(raw)
+    return fitted, table, raw, load_rul(subset)
 
 
 @st.cache_data
@@ -106,9 +107,11 @@ def rul_chart(trajectory: pd.DataFrame, threshold: float) -> alt.LayerChart:
     return alt.layer(lines, alert_line, alert_label, hover).properties(height=320)
 
 
-def sensor_chart(engine: pd.DataFrame, sensor: str) -> alt.Chart:
+def sensor_chart(engine: pd.DataFrame, sensor: str, normalized: bool) -> alt.Chart:
+    # 归一化后的读数是无量纲的 z 分数，不能再标物理单位
+    title = SENSOR_NAMES[sensor].split(" (")[0] + " (z-score)" if normalized else SENSOR_NAMES[sensor]
     return (
-        alt.Chart(engine, title=alt.Title(SENSOR_NAMES[sensor], fontSize=13, anchor="start"))
+        alt.Chart(engine, title=alt.Title(title, fontSize=13, anchor="start"))
         .mark_line(strokeWidth=1.5, color=PREDICTED_COLOR)
         .encode(
             x=alt.X("cycle:Q", title="Cycle", scale=alt.Scale(nice=False)),
@@ -150,7 +153,7 @@ def main() -> None:
             help="FD001、FD003 只有一种工况，FD002、FD004 有六种；FD003、FD004 有两种故障模式。",
         )
 
-    fitted, table, true_rul = load_model(subset)
+    fitted, table, raw, true_rul = load_model(subset)
     experiment, model, columns = fitted.experiment, fitted.model, fitted.columns
     final = load_final_metrics(subset)
 
@@ -166,7 +169,7 @@ def main() -> None:
             max_value=80,
             value=DEFAULT_THRESHOLD,
             step=5,
-            help="预测 RUL 低于等于这条线时提示维修。默认 40 来自训练集的交叉验证外预测，见 02_modeling 第 4 节。",
+            help="预测 RUL 低于等于这条线时提示维修。实际阈值应由维修周期和停机成本决定，各阈值的预警表现见 README。",
         )
         sensors = st.multiselect(
             "传感器",
@@ -177,7 +180,7 @@ def main() -> None:
         st.divider()
         st.caption(
             f"模型：`{experiment.name}`，只用训练发动机拟合。"
-            f"RUL ≤ 125 时，交叉验证 RMSE {final['cv']['rmse_near_failure']:.1f} 周期，"
+            f"RUL ≤ 125 时，嵌套交叉验证 RMSE {final['nested_cv']['rmse_near_failure']:.1f} 周期，"
             f"官方测试集 RMSE {final['test']['rmse_near_failure']:.1f} 周期；"
             f"测试集全部发动机 RMSE {final['test']['rmse']:.1f} 周期。"
         )
@@ -202,14 +205,17 @@ def main() -> None:
     )
 
     st.subheader("传感器曲线")
-    if experiment.features.startswith("condition") and N_CONDITIONS[subset] > 1:
+    # 多工况时原始读数被工况切换主导，看不出趋势，所以显示归一化后的 z 分数
+    normalized = experiment.features.startswith("condition") and N_CONDITIONS[subset] > 1
+    if normalized:
         st.caption("这个子集有多种工况，这里显示的是按工况归一化后的读数（z 分数），原始读数会被工况切换主导。")
     if not sensors:
         st.info("在左侧至少选择一个传感器。")
-    engine = table[table["unit"] == unit]
+    display = table if normalized else raw
+    engine = display[display["unit"] == unit]
     for start in range(0, len(sensors), 2):
         for column, sensor in zip(st.columns(2), sensors[start : start + 2]):
-            column.altair_chart(sensor_chart(engine, sensor), width="stretch")
+            column.altair_chart(sensor_chart(engine, sensor, normalized), width="stretch")
 
     st.caption(f"数据：NASA C-MAPSS {subset} 仿真数据。结果不能直接外推到真实设备，只用于演示预测性维护的方法。")
 

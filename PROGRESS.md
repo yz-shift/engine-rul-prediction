@@ -2,6 +2,13 @@
 
 > 进度日志。新的写在最上面；只追加，不删改旧记录。
 
+## 2026-11-06 02:45 · T-012 · 进行中
+- 做了：修复 Codex 第一轮意见并重跑全流程。嵌套 CV 现在包住特征集、参数和权重的全部选择；模型配置不再取整；权重规则改为先筛选再选最低分；新增按发动机的预警指标；界面不再给 z 分数标物理单位。删除 scripts/tune_asymmetric.py（已问过），合并进 tune_models.py
+- 改了：src/rul/tuning.py、asymmetric.py、alerts.py、results.py、experiments.py、evaluate.py、scripts/tune_models.py、train_models.py、app/streamlit_app.py、tests/、results/*/tuning.json、final.json、docs/review/codex_round1.md
+- 验证：pytest 113 个全过（含界面 AppTest）；tune_models.py 四个子集跑完。嵌套 CV：FD001 11.32，FD002 13.07，FD003 12.15，FD004 13.76，都是 5/5 折好于默认。测试 RMSE：13.92、25.82、14.33、26.75；RUL <= 125：12.83、12.02、11.59、13.09
+- 问题：权重 5 和窗口 50 都是搜索范围的边界。相比对称损失，权重 5 让 FD002、FD004 官方分数变差（4845 到 6756，4015 到 5091）。notebook 02 和 README 还是旧的，留给 T-013
+- 下一步：Codex 第二轮复审
+
 ## 2026-11-05 23:53 · T-011 · 完成
 - 做了：新增 asymmetric.py（报晚加权的平方损失、LateWeightedLightGBM、事先定好的决策规则）和 scripts/tune_asymmetric.py；比较权重 1、1.5、2、3、5，确定每个子集的最终模型写入 results/*/final.json；界面改读 final.json。按规则四个子集都采用权重 5
 - 改了：src/rul/asymmetric.py、src/rul/models.py、scripts/tune_asymmetric.py、tests/test_asymmetric.py、results/*/final.json、app/streamlit_app.py、TASKS.md

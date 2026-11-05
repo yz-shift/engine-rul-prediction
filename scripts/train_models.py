@@ -12,20 +12,14 @@ from dataclasses import asdict
 import pandas as pd
 
 from rul.data import SUBSETS, load_rul, load_trajectories
-from rul.evaluate import cross_validate, evaluate_on_test
-from rul.experiments import EXPERIMENTS, RESULTS_DIR, Experiment, build_featurizer, fit_final
-from rul.models import SEED, build_model
+from rul.evaluate import cross_validate_experiment, evaluate_on_test
+from rul.experiments import EXPERIMENTS, RESULTS_DIR, Experiment, fit_final
+from rul.models import SEED
 from rul.results import write_json
 
 
 def run(experiment: Experiment, train: pd.DataFrame, test: pd.DataFrame, true_rul: pd.Series) -> dict:
-    folds = cross_validate(
-        lambda: build_model(experiment.model, SEED),
-        lambda: build_featurizer(experiment.features, experiment.subset),
-        train,
-        experiment.cap,
-        seed=SEED,
-    )
+    folds = cross_validate_experiment(experiment, train, seed=SEED)
 
     final = fit_final(experiment, train)
     test_table, _ = final.featurizer.transform(test)

@@ -86,6 +86,12 @@ class Experiment:
         base = f"{self.model}__{self.features}__cap_{self.cap if self.cap else 'none'}"
         return f"{base}__{self.tag}" if self.tag else base
 
+    def make_featurizer(self) -> Featurizer:
+        return build_featurizer(self.features, self.subset, self.window)
+
+    def make_model(self) -> Pipeline:
+        return build_model(self.model, SEED, dict(self.model_params))
+
 
 _MODELS = ("linear_regression", "random_forest", "lightgbm")
 
@@ -128,10 +134,10 @@ class FittedModel:
 
 def fit_final(experiment: Experiment, train: pd.DataFrame) -> FittedModel:
     """用全部训练发动机拟合最终模型。train 是原始轨迹。"""
-    featurizer = build_featurizer(experiment.features, experiment.subset, experiment.window).fit(train)
+    featurizer = experiment.make_featurizer().fit(train)
     table, columns = featurizer.transform(train)
     labels = add_rul(train[["unit", "cycle"]], cap=experiment.cap)["rul"]
-    model = build_model(experiment.model, SEED, dict(experiment.model_params)).fit(table[columns], labels)
+    model = experiment.make_model().fit(table[columns], labels)
     return FittedModel(experiment, featurizer, model, columns)
 
 

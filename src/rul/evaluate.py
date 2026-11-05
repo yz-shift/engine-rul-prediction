@@ -12,17 +12,20 @@
 所有指标都和未截顶的真实 RUL 比较，这样截顶和不截顶的模型才有可比性。
 截顶只影响训练标签。
 
+这个指标的局限：它看不到 RUL > 125 的误差，也看不到健康阶段的误报，所以还要配合
+rul.alerts 的预警评估一起看。这个方案是看过测试结果后调整的，测试集因此已不算完全独立。
+
 特征器在每一折内部只用训练发动机拟合，防止工况归一化把验证折的信息带进来。
 """
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 
 import numpy as np
 import pandas as pd
 from sklearn.base import RegressorMixin
 
 from rul.data import add_rul, engine_folds
-from rul.experiments import Featurizer
+from rul.experiments import Experiment, Featurizer
 from rul.metrics import nasa_score, rmse
 
 NEAR_FAILURE_RUL = 125
@@ -43,6 +46,27 @@ def fold_metrics(truth: np.ndarray, predictions: np.ndarray) -> dict[str, float]
     }
 
 
+def _fold_predictions(
+    build_model: Callable[[], RegressorMixin],
+    build_featurizer: Callable[[], Featurizer],
+    trajectories: pd.DataFrame,
+    cap: int | None,
+    n_splits: int,
+    seed: int,
+) -> Iterator[tuple[np.ndarray, np.ndarray]]:
+    """逐折给出 (验证行位置, 验证行预测)。特征器和模型都只用训练发动机拟合。"""
+    labels = add_rul(trajectories[["unit", "cycle"]], cap=cap)["rul"].to_numpy()
+    for train_idx, val_idx in engine_folds(trajectories, n_splits, seed):
+        train, validation = trajectories.iloc[train_idx], trajectories.iloc[val_idx]
+        featurizer = build_featurizer().fit(train)
+        train_table, columns = featurizer.transform(train)
+        val_table, _ = featurizer.transform(validation)
+
+        model = build_model()
+        model.fit(train_table[columns], labels[train_idx])
+        yield val_idx, predict_rul(model, val_table[columns])
+
+
 def cross_validate(
     build_model: Callable[[], RegressorMixin],
     build_featurizer: Callable[[], Featurizer],
@@ -53,20 +77,42 @@ def cross_validate(
 ) -> pd.DataFrame:
     """按发动机做交叉验证，每折一行指标。trajectories 是原始轨迹。"""
     truth = add_rul(trajectories[["unit", "cycle"]])["rul"].to_numpy()
-    labels = add_rul(trajectories[["unit", "cycle"]], cap=cap)["rul"].to_numpy()
-
-    rows = []
-    for fold, (train_idx, val_idx) in enumerate(engine_folds(trajectories, n_splits, seed)):
-        train, validation = trajectories.iloc[train_idx], trajectories.iloc[val_idx]
-        featurizer = build_featurizer().fit(train)
-        train_table, columns = featurizer.transform(train)
-        val_table, _ = featurizer.transform(validation)
-
-        model = build_model()
-        model.fit(train_table[columns], labels[train_idx])
-        predictions = predict_rul(model, val_table[columns])
-        rows.append({"fold": fold, **fold_metrics(truth[val_idx], predictions)})
+    rows = [
+        {"fold": fold, **fold_metrics(truth[val_idx], predictions)}
+        for fold, (val_idx, predictions) in enumerate(
+            _fold_predictions(build_model, build_featurizer, trajectories, cap, n_splits, seed)
+        )
+    ]
     return pd.DataFrame(rows).set_index("fold")
+
+
+def cross_validate_experiment(
+    experiment: Experiment,
+    trajectories: pd.DataFrame,
+    n_splits: int = 5,
+    seed: int = 42,
+) -> pd.DataFrame:
+    """按实验配置做交叉验证。窗口、模型参数和最终训练用的是同一份配置。"""
+    return cross_validate(
+        experiment.make_model, experiment.make_featurizer, trajectories, experiment.cap, n_splits, seed
+    )
+
+
+def out_of_fold_predictions(
+    experiment: Experiment,
+    trajectories: pd.DataFrame,
+    n_splits: int = 5,
+    seed: int = 42,
+) -> pd.DataFrame:
+    """每台发动机的逐周期预测都来自没见过它的模型，返回 unit、cycle、rul、predicted。"""
+    result = add_rul(trajectories[["unit", "cycle"]])
+    result["predicted"] = np.nan
+    column = result.columns.get_loc("predicted")
+    for val_idx, predictions in _fold_predictions(
+        experiment.make_model, experiment.make_featurizer, trajectories, experiment.cap, n_splits, seed
+    ):
+        result.iloc[val_idx, column] = predictions
+    return result
 
 
 def evaluate_on_test(
