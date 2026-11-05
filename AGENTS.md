@@ -6,16 +6,18 @@
 ## 1. 项目是什么
 
 - 目标：用 NASA C-MAPSS 涡扇发动机退化数据集（先用 FD001）预测设备剩余寿命（RUL），类比矿用卡车和设备的预测性维护
-- 技术栈：Python 3.12 + pandas + scikit-learn + Jupyter + Streamlit（以 T-001 方案确认为准）
-- 入口文件：（T-001 确认后填）
+- 技术栈：Python 3.12 + pandas + scikit-learn + LightGBM + Jupyter + Streamlit
+- 入口文件：`src/rul/`（核心包）、`scripts/download_data.py`（下载数据）；Streamlit 界面 `app/streamlit_app.py` 在 T-007 创建
 
 ## 2. 常用命令
 
 | 用途 | 命令 |
 |---|---|
-| 安装依赖 | （填） |
-| 运行 | （填） |
-| 测试 | （填） |
+| 建虚拟环境 | `python -m venv .venv` |
+| 安装依赖 | `.venv/Scripts/python -m pip install -e ".[dev]"` |
+| 下载数据 | `.venv/Scripts/python scripts/download_data.py` |
+| 运行 | （T-007 完成后填） |
+| 测试 | `.venv/Scripts/python -X utf8 -m pytest -q` |
 
 表里没填的命令不要猜，先问我。
 
