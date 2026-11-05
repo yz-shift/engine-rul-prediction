@@ -2,6 +2,13 @@
 
 > 进度日志。新的写在最上面；只追加，不删改旧记录。
 
+## 2026-11-06 05:32 · T-013 · 完成
+- 做了：README 按四个子集、嵌套 CV、权重取舍和预警结果重写；重建 notebooks/02_modeling.ipynb，新增 notebooks/03_extensions.ipynb 并从头执行；重拍界面截图；用干净副本从建环境到两步实验全部重跑一遍，把新格式的 tuning.json 同步进仓库
+- 改了：README.md、notebooks/02_modeling.ipynb、notebooks/03_extensions.ipynb、docs/app_alert.png、docs/app_healthy.png、results/FD00{1,2,3,4}/tuning.json、TASKS.md
+- 验证：干净副本（提交 f8f5e78，之后的提交只有文档）新建 venv、安装、下载、pytest 116 个全过，train_models 和 tune_models 跑通。除 tuning.json 外，results/ 全部逐字节一致；tuning.json 除 configurations_cv 外完全相同，configurations_cv 42 行展开后只差旧文件的四位取整（最大差 5e-05），所以 notebook 不用重跑。两个 notebook 在主目录执行通过，没有在干净副本里执行。浏览器实测 FD001 第 34、1 台，FD004 第 5 台和切换子集都正常。主目录 pytest 116 个全过
+- 问题：更正时间：上面 T-012 的 03:40 和 03:55 两条时间是估的，比实际时钟早了，当时实际约 03:05，日志只追加不改旧记录，所以在这里说明。notebook 图表的配色没有跑通校验脚本（validate_palette.js 在 node 下报错），只是肉眼检查过。AGENTS.md 的“重跑全部实验”命令没有包含 tune_models.py，改这个文件要先问
+- 下一步：等用户决定 push、README 英文版、代码许可证、AGENTS.md 的命令；新会话做面试演练
+
 ## 2026-11-06 03:55 · T-012 · 完成
 - 做了：Codex 评审三轮结束。第一轮 9 条（2 条严重）全部采纳；第二轮没有严重问题，4 条全部采纳；第三轮确认修复到位，没有新问题。评审原文和每条的处理结论都写在 docs/review/
 - 改了：docs/review/codex_round3.md、TASKS.md
