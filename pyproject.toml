@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "engine-rul-prediction"
+version = "0.1.0"
+description = "Remaining useful life prediction on NASA C-MAPSS turbofan degradation data"
+requires-python = ">=3.12"
+dependencies = [
+    "pandas>=2.2,<4",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8,<9",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "real_data: 需要 data/raw 下的真实 C-MAPSS 文件，数据不存在时跳过",
+]
