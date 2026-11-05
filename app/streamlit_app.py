@@ -9,11 +9,10 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
-from rul.data import DEFAULT_DATA_DIR, SENSOR_COLUMNS, load_rul, load_trajectories
-from rul.experiments import RESULTS_DIR, best_experiment, fit_final, prepare_table
+from rul.data import DEFAULT_DATA_DIR, N_CONDITIONS, SENSOR_COLUMNS, SUBSETS, load_rul, load_trajectories
+from rul.experiments import RESULTS_DIR, best_experiment, fit_final
 from rul.inference import engine_index, first_alert_cycle, needs_maintenance, predict_engine
 
-SUBSET = "FD001"
 # 默认阈值来自 02_modeling 第 4 节：训练集交叉验证外预测中，阈值 40 时第一次预警最晚还剩 26 周期。
 DEFAULT_THRESHOLD = 40
 
@@ -40,22 +39,17 @@ TRUE_COLOR = "#eb6834"
 ALERT_COLOR = "#8f8e88"
 
 
-@st.cache_resource(show_spinner="正在用 100 台训练发动机拟合模型……")
-def load_model():
-    """拟合最终模型。缓存后切换发动机不用重新训练。"""
-    experiment = best_experiment()
-    return experiment, fit_final(experiment, load_trajectories(SUBSET, "train"))
+@st.cache_resource(show_spinner="正在用训练发动机拟合模型……")
+def load_model(subset: str):
+    """拟合最终模型并算好测试集特征。缓存后切换发动机不用重新训练。"""
+    fitted = fit_final(best_experiment(subset), load_trajectories(subset, "train"))
+    table, _ = fitted.featurizer.transform(load_trajectories(subset, "test"))
+    return fitted, table, load_rul(subset)
 
 
 @st.cache_data
-def load_test_data(feature_set: str):
-    table, columns = prepare_table(load_trajectories(SUBSET, "test"), feature_set)
-    return table, columns, load_rul(SUBSET)
-
-
-@st.cache_data
-def load_test_metrics(experiment_name: str) -> tuple[float, float]:
-    summary = pd.read_csv(RESULTS_DIR / "summary.csv", keep_default_na=False)
+def load_test_metrics(subset: str, experiment_name: str) -> tuple[float, float]:
+    summary = pd.read_csv(RESULTS_DIR / subset / "summary.csv", keep_default_na=False)
     summary["name"] = summary["model"] + "__" + summary["features"] + "__cap_" + summary["cap"].astype(str)
     row = summary.set_index("name").loc[experiment_name]
     return float(row["cv_rmse_near_failure"]), float(row["test_rmse"])
@@ -143,16 +137,25 @@ def main() -> None:
     st.set_page_config(page_title="发动机剩余寿命预警", page_icon="🛠️", layout="wide")
     st.title("发动机剩余寿命（RUL）预警")
 
-    if not (DEFAULT_DATA_DIR / f"train_{SUBSET}.txt").exists():
+    if not (DEFAULT_DATA_DIR / "train_FD001.txt").exists():
         st.error("没有找到数据。请先运行：python scripts/download_data.py")
         st.stop()
 
-    experiment, model = load_model()
-    table, columns, true_rul = load_test_data(experiment.features)
-    cv_rmse, test_rmse = load_test_metrics(experiment.name)
-
     with st.sidebar:
         st.header("设置")
+        requested_subset = st.query_params.get("subset")
+        subset = st.selectbox(
+            "数据子集",
+            SUBSETS,
+            index=SUBSETS.index(requested_subset) if requested_subset in SUBSETS else 0,
+            help="FD001、FD003 只有一种工况，FD002、FD004 有六种；FD003、FD004 有两种故障模式。",
+        )
+
+    fitted, table, true_rul = load_model(subset)
+    experiment, model, columns = fitted.experiment, fitted.model, fitted.columns
+    cv_rmse, test_rmse = load_test_metrics(subset, experiment.name)
+
+    with st.sidebar:
         units = sorted(table["unit"].unique())
         # 支持 ?engine=34 这样的链接，可以直接打开并分享某一台发动机
         unit = st.selectbox(
@@ -193,11 +196,13 @@ def main() -> None:
     st.subheader("剩余寿命预测")
     st.altair_chart(rul_chart(trajectory, threshold), width="stretch")
     st.caption(
-        "模型训练时把 RUL 截顶到 125，所以健康阶段的预测会停在 125 附近，这不代表真实寿命只剩 125。"
+        "模型训练时把 RUL 截顶，所以健康阶段的预测会停在上限附近，这不代表真实寿命只剩这么多。"
         "真实 RUL 曲线是由官方答案倒推出来的，模型看不到。"
     )
 
     st.subheader("传感器曲线")
+    if experiment.features.startswith("condition") and N_CONDITIONS[subset] > 1:
+        st.caption("这个子集有多种工况，这里显示的是按工况归一化后的读数（z 分数），原始读数会被工况切换主导。")
     if not sensors:
         st.info("在左侧至少选择一个传感器。")
     engine = table[table["unit"] == unit]
@@ -205,7 +210,7 @@ def main() -> None:
         for column, sensor in zip(st.columns(2), sensors[start : start + 2]):
             column.altair_chart(sensor_chart(engine, sensor), width="stretch")
 
-    st.caption("数据：NASA C-MAPSS FD001 仿真数据。结果不能直接外推到真实设备，只用于演示预测性维护的方法。")
+    st.caption(f"数据：NASA C-MAPSS {subset} 仿真数据。结果不能直接外推到真实设备，只用于演示预测性维护的方法。")
 
 
 if __name__ == "__main__":

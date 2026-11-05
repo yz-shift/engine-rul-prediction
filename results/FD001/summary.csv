@@ -1,0 +1,15 @@
+model,features,cap,cv_rmse_near_failure,cv_rmse_near_failure_std,cv_rmse_all_cycles,cv_score_per_100,test_rmse,test_rmse_near_failure,test_score
+lightgbm,window,125,14.04,0.82,47.25,394.04,14.57,13.49,308.68
+lightgbm,window_all_columns,125,14.11,0.84,47.32,400.19,14.73,13.57,314.13
+random_forest,window,125,14.44,0.98,48.34,435.17,14.44,13.52,311.42
+lightgbm,window_no_core_speed,125,15.19,1.38,47.68,471.87,15.29,14.23,400.65
+linear_regression,window,125,19.39,1.48,50.68,857.8,18.58,17.21,624.8
+random_forest,raw,125,20.47,1.8,50.8,1995.55,17.96,17.31,809.05
+lightgbm,raw,125,20.76,1.91,50.51,2140.71,18.08,17.67,957.28
+linear_regression,raw,125,21.18,1.73,51.76,1183.57,21.9,20.82,1313.99
+lightgbm,window,none,24.98,3.0,37.32,76337.61,27.02,26.85,6624.57
+random_forest,window,none,25.05,2.92,37.41,69412.68,26.17,26.25,5276.29
+linear_regression,window,none,32.93,4.17,43.57,14090.07,29.85,30.97,6493.33
+random_forest,raw,none,32.96,4.6,42.26,37621.83,31.62,32.43,24585.35
+lightgbm,raw,none,33.36,4.39,42.55,41293.28,32.79,33.89,32306.06
+linear_regression,raw,none,33.98,4.76,44.11,16794.3,31.9,32.87,13220.74

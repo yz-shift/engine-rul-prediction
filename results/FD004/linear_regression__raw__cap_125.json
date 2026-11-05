@@ -1,0 +1,81 @@
+{
+  "model": "linear_regression",
+  "features": "raw",
+  "cap": 125,
+  "subset": "FD004",
+  "window": 30,
+  "model_params": [],
+  "tag": "",
+  "seed": 42,
+  "feature_columns": [
+    "sensor_1",
+    "sensor_2",
+    "sensor_3",
+    "sensor_4",
+    "sensor_5",
+    "sensor_7",
+    "sensor_8",
+    "sensor_9",
+    "sensor_10",
+    "sensor_11",
+    "sensor_12",
+    "sensor_13",
+    "sensor_14",
+    "sensor_15",
+    "sensor_16",
+    "sensor_17",
+    "sensor_18",
+    "sensor_19",
+    "sensor_20",
+    "sensor_21"
+  ],
+  "cv_mean": {
+    "rmse_near_failure": 24.635,
+    "rmse_all_cycles": 80.2347,
+    "score_per_100": 2500.8277
+  },
+  "cv_std": {
+    "rmse_near_failure": 1.6659,
+    "rmse_all_cycles": 6.9626,
+    "score_per_100": 755.1839
+  },
+  "cv_folds": [
+    {
+      "fold": 0,
+      "rmse_near_failure": 25.8988,
+      "rmse_all_cycles": 81.0075,
+      "score_per_100": 2845.573
+    },
+    {
+      "fold": 1,
+      "rmse_near_failure": 26.3753,
+      "rmse_all_cycles": 85.5106,
+      "score_per_100": 3420.7354
+    },
+    {
+      "fold": 2,
+      "rmse_near_failure": 24.2277,
+      "rmse_all_cycles": 79.1062,
+      "score_per_100": 2227.6902
+    },
+    {
+      "fold": 3,
+      "rmse_near_failure": 24.5487,
+      "rmse_all_cycles": 69.0539,
+      "score_per_100": 2617.4325
+    },
+    {
+      "fold": 4,
+      "rmse_near_failure": 22.1246,
+      "rmse_all_cycles": 86.4953,
+      "score_per_100": 1392.7074
+    }
+  ],
+  "test": {
+    "rmse": 36.4493,
+    "score": 16637.5064,
+    "rmse_near_failure": 26.5509,
+    "n_engines": 248,
+    "n_above_near_failure": 67
+  }
+}

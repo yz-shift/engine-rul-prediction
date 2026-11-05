@@ -1,8 +1,11 @@
 {
-  "model": "linear_regression",
+  "model": "lightgbm",
   "features": "window",
-  "cap": null,
+  "cap": 125,
   "subset": "FD001",
+  "window": 30,
+  "model_params": [],
+  "tag": "",
   "seed": 42,
   "feature_columns": [
     "sensor_1",
@@ -87,49 +90,52 @@
     "sensor_21_slope"
   ],
   "cv_mean": {
-    "rmse_near_failure": 32.9293,
-    "rmse_all_cycles": 43.57,
-    "score_per_100": 14090.0712
+    "rmse_near_failure": 14.0391,
+    "rmse_all_cycles": 47.2535,
+    "score_per_100": 394.0418
   },
   "cv_std": {
-    "rmse_near_failure": 4.1694,
-    "rmse_all_cycles": 4.41,
-    "score_per_100": 9748.2032
+    "rmse_near_failure": 0.8225,
+    "rmse_all_cycles": 4.4664,
+    "score_per_100": 68.8962
   },
   "cv_folds": [
     {
       "fold": 0,
-      "rmse_near_failure": 29.5849,
-      "rmse_all_cycles": 36.167,
-      "score_per_100": 5673.1416
+      "rmse_near_failure": 12.9543,
+      "rmse_all_cycles": 41.8793,
+      "score_per_100": 340.7465
     },
     {
       "fold": 1,
-      "rmse_near_failure": 28.4994,
-      "rmse_all_cycles": 47.8061,
-      "score_per_100": 6504.3174
+      "rmse_near_failure": 14.0644,
+      "rmse_all_cycles": 50.6862,
+      "score_per_100": 317.9049
     },
     {
       "fold": 2,
-      "rmse_near_failure": 39.0323,
-      "rmse_all_cycles": 43.8089,
-      "score_per_100": 29620.8642
+      "rmse_near_failure": 14.8418,
+      "rmse_all_cycles": 43.1883,
+      "score_per_100": 492.8331
     },
     {
       "fold": 3,
-      "rmse_near_failure": 33.5615,
-      "rmse_all_cycles": 44.443,
-      "score_per_100": 12045.1588
+      "rmse_near_failure": 13.515,
+      "rmse_all_cycles": 48.746,
+      "score_per_100": 401.6039
     },
     {
       "fold": 4,
-      "rmse_near_failure": 33.9686,
-      "rmse_all_cycles": 45.6249,
-      "score_per_100": 16606.8738
+      "rmse_near_failure": 14.8199,
+      "rmse_all_cycles": 51.7674,
+      "score_per_100": 417.1206
     }
   ],
   "test": {
-    "rmse": 29.8494,
-    "score": 6493.3318
+    "rmse": 14.5694,
+    "score": 308.6779,
+    "rmse_near_failure": 13.4906,
+    "n_engines": 100,
+    "n_above_near_failure": 11
   }
 }

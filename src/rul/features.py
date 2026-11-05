@@ -6,10 +6,58 @@
 数据泄漏。窗口按发动机分别计算，不跨发动机。
 """
 
+import numpy as np
 import pandas as pd
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
 
-# 官方测试集最短轨迹是 31 周期，窗口取 30，每台测试发动机在预测时都能凑满窗口。
+from rul.data import SETTING_COLUMNS
+
+# FD001 官方测试集最短轨迹是 31 周期，窗口取 30，预测时每台都能凑满窗口。
+# FD002、FD004 最短只有 21、19 周期，凑不满时用已有的周期计算。
 WINDOW = 30
+# 标准差低于这个值视为恒定：恒定读数的标准差可能因浮点误差略大于 0。
+_MIN_STD = 1e-9
+
+
+class ConditionNormalizer:
+    """按工况把传感器读数转成 z 分数。
+
+    FD002、FD004 有六种工况，工况切换造成的读数跳变远大于退化信号。先按工况设置
+    聚类，再用每种工况自己的均值和标准差归一化，留下的主要是相对该工况的偏离。
+
+    聚类和统计量都要从数据拟合，所以必须只在训练数据上 fit，否则就是泄漏。
+    """
+
+    def __init__(self, columns: list[str], n_conditions: int, seed: int = 42):
+        self.columns = columns
+        self.n_conditions = n_conditions
+        self.seed = seed
+
+    def _labels(self, df: pd.DataFrame) -> np.ndarray:
+        if self.n_conditions == 1:
+            return np.zeros(len(df), dtype=int)
+        return self.kmeans_.predict(self.scaler_.transform(df[SETTING_COLUMNS]))
+
+    def fit(self, df: pd.DataFrame) -> "ConditionNormalizer":
+        if self.n_conditions > 1:
+            # 三个设置量纲差很多（0–42、0–0.84、60–100），不缩放聚类会被最大的主导
+            self.scaler_ = StandardScaler().fit(df[SETTING_COLUMNS])
+            self.kmeans_ = KMeans(n_clusters=self.n_conditions, n_init=10, random_state=self.seed)
+            self.kmeans_.fit(self.scaler_.transform(df[SETTING_COLUMNS]))
+        grouped = df[self.columns].groupby(self._labels(df))
+        self.means_ = grouped.mean()
+        self.stds_ = grouped.std()
+        return self
+
+    def transform(self, df: pd.DataFrame) -> pd.DataFrame:
+        labels = self._labels(df)
+        means = self.means_.reindex(labels).to_numpy()
+        stds = self.stds_.reindex(labels).to_numpy()
+        values = df[self.columns].to_numpy(dtype=float)
+        # 该工况下恒定的传感器没有信息，写 0
+        z_scores = np.divide(values - means, stds, out=np.zeros_like(values), where=stds > _MIN_STD)
+        return df.assign(**dict(zip(self.columns, z_scores.T)))
 
 
 def _rolling_slope(cycle: pd.Series, values: pd.Series, units: pd.Series, window: int) -> pd.Series:

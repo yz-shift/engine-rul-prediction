@@ -17,6 +17,8 @@ DEFAULT_DATA_DIR = Path(__file__).resolve().parents[2] / "data" / "raw"
 
 SUBSETS = ("FD001", "FD002", "FD003", "FD004")
 SPLITS = ("train", "test")
+# 官方 readme：FD001、FD003 只有一种工况（海平面），FD002、FD004 有六种。
+N_CONDITIONS = {"FD001": 1, "FD002": 6, "FD003": 1, "FD004": 6}
 
 ID_COLUMNS = ["unit", "cycle"]
 SETTING_COLUMNS = [f"setting_{i}" for i in range(1, 4)]

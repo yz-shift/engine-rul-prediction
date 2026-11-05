@@ -1,8 +1,11 @@
 {
-  "model": "random_forest",
-  "features": "window",
+  "model": "lightgbm",
+  "features": "condition_window",
   "cap": 125,
-  "subset": "FD001",
+  "subset": "FD004",
+  "window": 30,
+  "model_params": [],
+  "tag": "",
   "seed": 42,
   "feature_columns": [
     "sensor_1",
@@ -10,6 +13,7 @@
     "sensor_3",
     "sensor_4",
     "sensor_5",
+    "sensor_6",
     "sensor_7",
     "sensor_8",
     "sensor_9",
@@ -40,6 +44,9 @@
     "sensor_5_mean",
     "sensor_5_std",
     "sensor_5_slope",
+    "sensor_6_mean",
+    "sensor_6_std",
+    "sensor_6_slope",
     "sensor_7_mean",
     "sensor_7_std",
     "sensor_7_slope",
@@ -87,49 +94,52 @@
     "sensor_21_slope"
   ],
   "cv_mean": {
-    "rmse_near_failure": 14.4356,
-    "rmse_all_cycles": 48.3353,
-    "score_per_100": 435.1669
+    "rmse_near_failure": 16.5461,
+    "rmse_all_cycles": 76.7928,
+    "score_per_100": 711.7028
   },
   "cv_std": {
-    "rmse_near_failure": 0.9837,
-    "rmse_all_cycles": 4.6081,
-    "score_per_100": 79.401
+    "rmse_near_failure": 1.7561,
+    "rmse_all_cycles": 7.3792,
+    "score_per_100": 272.5623
   },
   "cv_folds": [
     {
       "fold": 0,
-      "rmse_near_failure": 13.0814,
-      "rmse_all_cycles": 42.849,
-      "score_per_100": 352.9462
+      "rmse_near_failure": 19.4545,
+      "rmse_all_cycles": 76.0887,
+      "score_per_100": 1167.5845
     },
     {
       "fold": 1,
-      "rmse_near_failure": 15.0225,
-      "rmse_all_cycles": 52.6687,
-      "score_per_100": 363.191
+      "rmse_near_failure": 16.7873,
+      "rmse_all_cycles": 84.0221,
+      "score_per_100": 762.7401
     },
     {
       "fold": 2,
-      "rmse_near_failure": 15.4432,
-      "rmse_all_cycles": 44.1891,
-      "score_per_100": 546.0823
+      "rmse_near_failure": 15.9656,
+      "rmse_all_cycles": 77.2898,
+      "score_per_100": 568.9102
     },
     {
       "fold": 3,
-      "rmse_near_failure": 13.7461,
-      "rmse_all_cycles": 49.4312,
-      "score_per_100": 461.1896
+      "rmse_near_failure": 15.5636,
+      "rmse_all_cycles": 64.9106,
+      "score_per_100": 524.9493
     },
     {
       "fold": 4,
-      "rmse_near_failure": 14.8849,
-      "rmse_all_cycles": 52.5388,
-      "score_per_100": 452.4256
+      "rmse_near_failure": 14.9597,
+      "rmse_all_cycles": 81.6527,
+      "score_per_100": 534.3296
     }
   ],
   "test": {
-    "rmse": 14.4414,
-    "score": 311.4249
+    "rmse": 26.5985,
+    "score": 4863.2796,
+    "rmse_near_failure": 14.4548,
+    "n_engines": 248,
+    "n_above_near_failure": 67
   }
 }

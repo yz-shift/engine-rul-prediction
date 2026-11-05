@@ -6,6 +6,7 @@ import pytest
 from sklearn.base import BaseEstimator, RegressorMixin
 
 from rul.evaluate import NEAR_FAILURE_RUL, cross_validate, evaluate_on_test, predict_rul
+from rul.experiments import Featurizer
 from rul.metrics import nasa_score
 from rul.models import build_model
 
@@ -26,6 +27,23 @@ class ConstantSpy(RegressorMixin, BaseEstimator):
         return np.full(len(X), self.value)
 
 
+def marker_only():
+    return Featurizer(["marker"])
+
+
+class SpyFeaturizer(Featurizer):
+    """记录拟合时看到的发动机。"""
+
+    fitted_units: list = []
+
+    def __init__(self):
+        super().__init__(["marker"])
+
+    def fit(self, train):
+        SpyFeaturizer.fitted_units.append(set(train["unit"]))
+        return self
+
+
 @pytest.fixture
 def table():
     # 10 台发动机，寿命 40、42、…、58；marker 让模型“看到”发动机编号
@@ -39,7 +57,7 @@ def table():
 
 def test_cross_validation_never_trains_on_validation_engines(table):
     ConstantSpy.fits = []
-    folds = cross_validate(ConstantSpy, table, ["marker"], cap=None, n_splits=5)
+    folds = cross_validate(ConstantSpy, marker_only, table, cap=None, n_splits=5)
 
     assert len(folds) == 5
     # 5 折、10 台：每折恰好留出 2 台，每台恰好被留出一次
@@ -48,10 +66,20 @@ def test_cross_validation_never_trains_on_validation_engines(table):
     assert set().union(*held_out) == set(range(1, 11))
 
 
+def test_featurizer_is_fitted_only_on_training_engines_of_each_fold(table):
+    SpyFeaturizer.fitted_units = []
+    cross_validate(ConstantSpy, SpyFeaturizer, table, cap=None, n_splits=5)
+
+    assert len(SpyFeaturizer.fitted_units) == 5
+    held_out = [set(range(1, 11)) - units for units in SpyFeaturizer.fitted_units]
+    assert all(len(units) == 2 for units in held_out)
+    assert set().union(*held_out) == set(range(1, 11))
+
+
 def test_cap_applies_to_training_labels_but_not_to_evaluation_truth(table):
     ConstantSpy.fits = []
-    capped = cross_validate(ConstantSpy, table, ["marker"], cap=12)
-    uncapped = cross_validate(ConstantSpy, table, ["marker"], cap=None)
+    capped = cross_validate(ConstantSpy, marker_only, table, cap=12)
+    uncapped = cross_validate(ConstantSpy, marker_only, table, cap=None)
 
     assert all(fit["max_label"] == 12 for fit in ConstantSpy.fits[:5])
     assert all(fit["max_label"] > 12 for fit in ConstantSpy.fits[5:])
@@ -68,7 +96,7 @@ def test_near_failure_metrics_ignore_healthy_cycles():
             "marker": np.repeat([1, 2], 200),
         }
     )
-    folds = cross_validate(lambda: ConstantSpy(0.0), table, ["marker"], cap=None, n_splits=2)
+    folds = cross_validate(lambda: ConstantSpy(0.0), marker_only, table, cap=None, n_splits=2)
 
     near = np.arange(NEAR_FAILURE_RUL + 1, dtype=float)
     everything = np.arange(200, dtype=float)
@@ -100,6 +128,21 @@ def test_evaluate_on_test_uses_last_cycle_and_aligns_by_unit():
     # 误差 0、-10 → rmse = sqrt(50)，score = e^(10/13) - 1
     assert metrics["rmse"] == pytest.approx(np.sqrt(50))
     assert metrics["score"] == pytest.approx(np.exp(10 / 13) - 1)
+
+
+def test_evaluate_on_test_reports_near_failure_rmse_separately():
+    class Constant:
+        def predict(self, X):
+            return np.full(len(X), 100.0)
+
+    # 一台真实 RUL 90（误差 +10），一台 200（误差 -100）：只有前者算临近故障
+    test_table = pd.DataFrame({"unit": [1, 2], "cycle": [5, 5]})
+    metrics = evaluate_on_test(Constant(), test_table, ["cycle"], pd.Series({1: 90, 2: 200}))
+
+    assert metrics["rmse_near_failure"] == pytest.approx(10.0)
+    assert metrics["rmse"] == pytest.approx(np.sqrt((100 + 10000) / 2))
+    assert metrics["n_engines"] == 2
+    assert metrics["n_above_near_failure"] == 1
 
 
 def test_build_model_rejects_unknown_name():

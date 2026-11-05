@@ -6,8 +6,8 @@ import pytest
 from sklearn.feature_selection import VarianceThreshold
 
 from rul.data import DEFAULT_DATA_DIR, load_trajectories
-from rul.experiments import prepare_table
-from rul.features import add_window_features
+from rul.experiments import build_featurizer
+from rul.features import ConditionNormalizer, add_window_features
 
 
 @pytest.fixture
@@ -59,7 +59,8 @@ def test_constant_signal_has_exactly_zero_slope_and_std():
 )
 def test_constant_sensors_produce_no_noise_features_on_real_data():
     # 14 个有变化的传感器，各有原值、均值、标准差、斜率，共 56 列
-    table, columns = prepare_table(load_trajectories("FD001", "train"), "window")
+    train = load_trajectories("FD001", "train")
+    table, columns = build_featurizer("window").fit(train).transform(train)
     assert VarianceThreshold().fit(table[columns]).get_support().sum() == 56
 
 
@@ -111,3 +112,53 @@ def test_returns_three_features_per_column(df):
     assert columns == ["x_mean", "x_std", "x_slope", "y_mean", "y_std", "y_slope"]
     assert set(columns) <= set(table.columns)
     assert len(table) == len(df)
+
+
+def _conditions_frame():
+    # 两种工况：读数基准差很多，同一工况内才有可比性
+    return pd.DataFrame(
+        {
+            "setting_1": [0.0] * 4 + [40.0] * 4,
+            "setting_2": [0.0] * 4 + [0.8] * 4,
+            "setting_3": [100.0] * 4 + [60.0] * 4,
+            "x": [10.0, 11.0, 12.0, 13.0, 500.0, 502.0, 504.0, 506.0],
+            "constant_in_condition": [7.0] * 4 + [9.0] * 4,
+        }
+    )
+
+
+def test_condition_normalizer_uses_each_conditions_own_statistics():
+    df = _conditions_frame()
+    result = ConditionNormalizer(["x", "constant_in_condition"], n_conditions=2).fit(df).transform(df)
+
+    for start in (0, 4):
+        values = result["x"].iloc[start : start + 4]
+        assert values.mean() == pytest.approx(0.0)
+        assert values.std() == pytest.approx(1.0)
+    # 不同工况的读数差 490，归一化后同一相对位置的值应该一样
+    assert result["x"].iloc[0] == pytest.approx(result["x"].iloc[4])
+    assert (result["constant_in_condition"] == 0).all()
+
+
+def test_condition_normalizer_only_learns_from_fit_data():
+    train = _conditions_frame()
+    normalizer = ConditionNormalizer(["x"], n_conditions=2).fit(train)
+    expected = normalizer.transform(train)["x"].iloc[0]
+
+    # 新数据的读数再极端，也不能改变已经学到的统计量
+    new = train.iloc[[0, 4]].assign(x=[10.0, 99999.0])
+    assert normalizer.transform(new)["x"].iloc[0] == pytest.approx(expected)
+    assert normalizer.transform(new)["x"].iloc[1] > 1000
+
+
+def test_condition_normalizer_does_not_modify_input():
+    df = _conditions_frame()
+    before = df.copy()
+    ConditionNormalizer(["x"], n_conditions=2).fit(df).transform(df)
+    pd.testing.assert_frame_equal(df, before)
+
+
+def test_single_condition_does_not_need_settings():
+    df = pd.DataFrame({"x": [1.0, 2.0, 3.0]})
+    result = ConditionNormalizer(["x"], n_conditions=1).fit(df).transform(df)
+    assert result["x"].tolist() == pytest.approx([-1.0, 0.0, 1.0])

@@ -7,6 +7,8 @@ from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
+from rul.asymmetric import LateWeightedLightGBM
+
 SEED = 42
 
 
@@ -66,15 +68,28 @@ def _lightgbm(seed: int) -> Pipeline:
     )
 
 
+def _lightgbm_asymmetric(seed: int) -> Pipeline:
+    return Pipeline(
+        [
+            ("drop_constant", VarianceThreshold()),
+            ("model", LateWeightedLightGBM(random_state=seed)),
+        ]
+    )
+
+
 MODEL_BUILDERS = {
     "linear_regression": _linear_regression,
     "random_forest": _random_forest,
     "lightgbm": _lightgbm,
+    "lightgbm_asymmetric": _lightgbm_asymmetric,
 }
 
 
-def build_model(name: str, seed: int = SEED) -> Pipeline:
-    """按名称创建未训练的模型。"""
+def build_model(name: str, seed: int = SEED, params: dict | None = None) -> Pipeline:
+    """按名称创建未训练的模型。params 覆盖模型的默认参数。"""
     if name not in MODEL_BUILDERS:
         raise ValueError(f"未知模型 {name!r}，可选：{sorted(MODEL_BUILDERS)}")
-    return MODEL_BUILDERS[name](seed)
+    pipeline = MODEL_BUILDERS[name](seed)
+    if params:
+        pipeline.set_params(**{f"model__{key}": value for key, value in params.items()})
+    return pipeline

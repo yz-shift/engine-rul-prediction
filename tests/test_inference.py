@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 from streamlit.testing.v1 import AppTest
 
-from rul.data import DEFAULT_DATA_DIR
+from rul.data import DEFAULT_DATA_DIR, load_rul
 from rul.inference import engine_index, first_alert_cycle, needs_maintenance, predict_engine
 
 APP = str(Path(__file__).resolve().parents[1] / "app" / "streamlit_app.py")
@@ -94,9 +94,14 @@ def test_app_runs_and_reacts_to_inputs():
     assert bool(app.error) == (predicted <= 80)
 
     # 切到另一台发动机，指标要随之变化
-    app.selectbox[0].set_value(34).run()
+    app.selectbox[1].set_value(34).run()
     assert not app.exception
     assert app.metric[2].value != "112"
+
+    # 切到多工况子集：选项变了，发动机回到第 1 台，指标要换成 FD002 的官方答案
+    app.selectbox[0].set_value("FD002").run()
+    assert not app.exception
+    assert app.metric[2].value == str(load_rul("FD002").loc[1])
 
     # 不选传感器也不能报错
     app.multiselect[0].set_value([]).run()

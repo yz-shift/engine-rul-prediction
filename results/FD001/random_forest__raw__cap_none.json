@@ -3,6 +3,9 @@
   "features": "raw",
   "cap": null,
   "subset": "FD001",
+  "window": 30,
+  "model_params": [],
+  "tag": "",
   "seed": 42,
   "feature_columns": [
     "sensor_1",
@@ -70,6 +73,9 @@
   ],
   "test": {
     "rmse": 31.6217,
-    "score": 24585.3473
+    "score": 24585.3473,
+    "rmse_near_failure": 32.4287,
+    "n_engines": 100,
+    "n_above_near_failure": 11
   }
 }

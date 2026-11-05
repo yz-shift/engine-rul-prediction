@@ -1,8 +1,11 @@
 {
-  "model": "lightgbm",
-  "features": "window",
-  "cap": null,
-  "subset": "FD001",
+  "model": "linear_regression",
+  "features": "condition_window",
+  "cap": 125,
+  "subset": "FD003",
+  "window": 30,
+  "model_params": [],
+  "tag": "",
   "seed": 42,
   "feature_columns": [
     "sensor_1",
@@ -10,6 +13,7 @@
     "sensor_3",
     "sensor_4",
     "sensor_5",
+    "sensor_6",
     "sensor_7",
     "sensor_8",
     "sensor_9",
@@ -40,6 +44,9 @@
     "sensor_5_mean",
     "sensor_5_std",
     "sensor_5_slope",
+    "sensor_6_mean",
+    "sensor_6_std",
+    "sensor_6_slope",
     "sensor_7_mean",
     "sensor_7_std",
     "sensor_7_slope",
@@ -87,49 +94,52 @@
     "sensor_21_slope"
   ],
   "cv_mean": {
-    "rmse_near_failure": 24.9772,
-    "rmse_all_cycles": 37.3193,
-    "score_per_100": 76337.6128
+    "rmse_near_failure": 19.2566,
+    "rmse_all_cycles": 87.3488,
+    "score_per_100": 885.4079
   },
   "cv_std": {
-    "rmse_near_failure": 2.997,
-    "rmse_all_cycles": 5.1686,
-    "score_per_100": 85354.8445
+    "rmse_near_failure": 0.751,
+    "rmse_all_cycles": 11.1571,
+    "score_per_100": 81.0307
   },
   "cv_folds": [
     {
       "fold": 0,
-      "rmse_near_failure": 21.5374,
-      "rmse_all_cycles": 28.5945,
-      "score_per_100": 4977.3806
+      "rmse_near_failure": 19.1035,
+      "rmse_all_cycles": 80.3745,
+      "score_per_100": 949.0529
     },
     {
       "fold": 1,
-      "rmse_near_failure": 25.8444,
-      "rmse_all_cycles": 42.2823,
-      "score_per_100": 99533.729
+      "rmse_near_failure": 18.5806,
+      "rmse_all_cycles": 93.4746,
+      "score_per_100": 842.1807
     },
     {
       "fold": 2,
-      "rmse_near_failure": 29.588,
-      "rmse_all_cycles": 38.0358,
-      "score_per_100": 37348.6884
+      "rmse_near_failure": 19.5627,
+      "rmse_all_cycles": 103.8379,
+      "score_per_100": 904.6751
     },
     {
       "fold": 3,
-      "rmse_near_failure": 23.9029,
-      "rmse_all_cycles": 39.5332,
-      "score_per_100": 215290.9985
+      "rmse_near_failure": 20.3969,
+      "rmse_all_cycles": 82.4913,
+      "score_per_100": 963.5091
     },
     {
       "fold": 4,
-      "rmse_near_failure": 24.0133,
-      "rmse_all_cycles": 38.1505,
-      "score_per_100": 24537.2677
+      "rmse_near_failure": 18.6391,
+      "rmse_all_cycles": 76.5658,
+      "score_per_100": 767.6217
     }
   ],
   "test": {
-    "rmse": 27.0231,
-    "score": 6624.5667
+    "rmse": 19.7167,
+    "score": 823.0141,
+    "rmse_near_failure": 18.9225,
+    "n_engines": 100,
+    "n_above_near_failure": 15
   }
 }

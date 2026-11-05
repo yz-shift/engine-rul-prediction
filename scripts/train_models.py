@@ -1,56 +1,43 @@
 """运行全部实验，把每个模型的指标写进 results/。
 
-用法：python scripts/train_models.py
+用法：python scripts/train_models.py [--subsets FD001 FD002 ...]
 
 流程：先在训练集上做交叉验证，再用全部训练发动机拟合，在官方测试集上评估。
 模型参数是事先定好的，不根据测试集结果调整；选模型只看交叉验证。
 """
 
-import json
+import argparse
 from dataclasses import asdict
 
 import pandas as pd
 
-from rul.data import load_rul, load_trajectories
+from rul.data import SUBSETS, load_rul, load_trajectories
 from rul.evaluate import cross_validate, evaluate_on_test
-from rul.experiments import EXPERIMENTS, RESULTS_DIR, Experiment, fit_final, prepare_table
+from rul.experiments import EXPERIMENTS, RESULTS_DIR, Experiment, build_featurizer, fit_final
 from rul.models import SEED, build_model
-
-SUBSET = "FD001"
-# 随机森林多线程汇总预测时，浮点数相加的顺序不固定，第 13 位小数之后会有抖动。
-# 保留 4 位小数已远超指标的实际精度，也让结果文件每次运行都完全一致。
-DECIMALS = 4
-
-
-def _rounded(value):
-    """递归把结果里的浮点数四舍五入。"""
-    if isinstance(value, float):
-        return round(value, DECIMALS)
-    if isinstance(value, dict):
-        return {k: _rounded(v) for k, v in value.items()}
-    if isinstance(value, list):
-        return [_rounded(v) for v in value]
-    return value
+from rul.results import write_json
 
 
 def run(experiment: Experiment, train: pd.DataFrame, test: pd.DataFrame, true_rul: pd.Series) -> dict:
-    table, columns = prepare_table(train, experiment.features)
     folds = cross_validate(
-        lambda: build_model(experiment.model, SEED), table, columns, experiment.cap, seed=SEED
+        lambda: build_model(experiment.model, SEED),
+        lambda: build_featurizer(experiment.features, experiment.subset),
+        train,
+        experiment.cap,
+        seed=SEED,
     )
 
     final = fit_final(experiment, train)
-    test_table, _ = prepare_table(test, experiment.features)
+    test_table, _ = final.featurizer.transform(test)
 
     return {
         **asdict(experiment),
-        "subset": SUBSET,
         "seed": SEED,
-        "feature_columns": columns,
+        "feature_columns": final.columns,
         "cv_mean": folds.mean().to_dict(),
         "cv_std": folds.std().to_dict(),
         "cv_folds": folds.reset_index().to_dict(orient="records"),
-        "test": evaluate_on_test(final, test_table, columns, true_rul),
+        "test": evaluate_on_test(final.model, test_table, final.columns, true_rul),
     }
 
 
@@ -65,6 +52,7 @@ def summarise(results: list[dict]) -> pd.DataFrame:
             "cv_rmse_all_cycles": r["cv_mean"]["rmse_all_cycles"],
             "cv_score_per_100": r["cv_mean"]["score_per_100"],
             "test_rmse": r["test"]["rmse"],
+            "test_rmse_near_failure": r["test"]["rmse_near_failure"],
             "test_score": r["test"]["score"],
         }
         for r in results
@@ -72,23 +60,31 @@ def summarise(results: list[dict]) -> pd.DataFrame:
     return summary.sort_values("cv_rmse_near_failure").round(2)
 
 
-def main() -> None:
-    train = load_trajectories(SUBSET, "train")
-    test = load_trajectories(SUBSET, "test")
-    true_rul = load_rul(SUBSET)
+def run_subset(subset: str) -> None:
+    train = load_trajectories(subset, "train")
+    test = load_trajectories(subset, "test")
+    true_rul = load_rul(subset)
 
-    RESULTS_DIR.mkdir(exist_ok=True)
+    output_dir = RESULTS_DIR / subset
+    output_dir.mkdir(parents=True, exist_ok=True)
     results = []
-    for experiment in EXPERIMENTS:
+    for experiment in EXPERIMENTS[subset]:
         result = run(experiment, train, test, true_rul)
-        path = RESULTS_DIR / f"{experiment.name}.json"
-        path.write_text(json.dumps(_rounded(result), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        path = output_dir / f"{experiment.name}.json"
+        write_json(path, result)
         results.append(result)
-        print(f"完成 {experiment.name}", flush=True)
+        print(f"完成 {subset} {experiment.name}", flush=True)
 
     summary = summarise(results)
-    summary.to_csv(RESULTS_DIR / "summary.csv", index=False)
-    print(summary.to_string(index=False))
+    summary.to_csv(output_dir / "summary.csv", index=False)
+    print(summary.to_string(index=False), flush=True)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="运行全部实验")
+    parser.add_argument("--subsets", nargs="+", choices=SUBSETS, default=list(SUBSETS))
+    for subset in parser.parse_args().subsets:
+        run_subset(subset)
 
 
 if __name__ == "__main__":

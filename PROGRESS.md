@@ -2,6 +2,13 @@
 
 > 进度日志。新的写在最上面；只追加，不删改旧记录。
 
+## 2026-11-05 22:55 · T-009 · 完成
+- 做了：重构特征流程，改为在每一折内部只用训练发动机拟合（Featurizer）；新增 ConditionNormalizer（KMeans 聚类工况后按工况 z 分数归一化）；实验扩展到四个子集，结果移到 results/<子集>/；界面支持切换子集和 ?subset= 链接；测试集结果增加和 CV 同口径的 rmse_near_failure。最优模型（默认参数）CV 和测试 RMSE：FD001 14.04、14.57；FD002 16.46、26.51；FD003 14.16、15.39；FD004 16.55、26.60
+- 改了：src/rul/features.py、experiments.py、evaluate.py、data.py、models.py、results.py、scripts/train_models.py、app/streamlit_app.py、tests/、results/、TASKS.md
+- 验证：重构前后 FD001 的结果文件 diff 为 0 行（回归测试）；pytest 全过；有测试确认特征器只在训练折上拟合、归一化只学训练数据
+- 问题：FD002、FD004 的 CV（16.5）和测试 RMSE（26.5）差很多，排查后不是泛化问题，是口径不同：同样只算 RUL <= 125 时测试 RMSE 是 13.35、14.45。这两个子集 22–27% 的测试发动机 RUL 大于 125（最高 195），截顶 125 的模型平均低估 40 多个周期。这是截顶在多工况子集上的真实代价。notebook 02 还用旧接口，在 T-013 一起更新
+- 下一步：T-010 超参数搜索
+
 ## 2026-11-05 21:18 · T-008 · 完成
 - 做了：写 README（简介、截图、结果表、提升来源、数据发现、预警线、技术栈、运行方法、设计取舍、踩过的坑、局限、数据出处和许可证）；修正 download_data.py 里无法核实的来源注释
 - 改了：README.md、scripts/download_data.py、TASKS.md、PROGRESS.md
