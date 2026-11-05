@@ -2,6 +2,13 @@
 
 > 进度日志。新的写在最上面；只追加，不删改旧记录。
 
+## 2026-11-05 20:39 · T-003 · 完成
+- 做了：写 notebooks/01_eda.ipynb（传感器含义表、恒定特征、每台发动机内部的相关、趋势小图、Nc/NRc 方向分析、退化指标和截顶依据、结论表）；经我同意装 matplotlib、jupyterlab；填好 AGENTS.md 第 1、2 节（已在 a088e21 提交）
+- 改了：notebooks/01_eda.ipynb、pyproject.toml、requirements-lock.txt、TASKS.md
+- 验证：jupyter nbconvert --execute 从头跑通，无报错、无未执行单元格；结论里的数字对照了 notebook 输出；5 张图逐张看过；pytest 13 个全过。只用训练集，测试集只看轨迹长度，没读 RUL 答案
+- 问题：传感器名称表核对的是两篇转引论文（arXiv 2605.02507、2503.07854），未读到 Saxena 2008 原文，写 README 前要再查。pandas 的 Spearman 依赖 scipy，改用先排名再算 Pearson，没有新增依赖
+- 下一步：T-004 标签、按发动机切分、评分函数（需要 scikit-learn，装之前先问我）
+
 ## 2026-11-05 20:28 · T-002 · 完成
 - 做了：搭项目骨架（src 布局、pyproject、.venv）；写读取模块（load_trajectories、load_rul，读入时校验列数和缺失值）；写下载脚本（白名单提取、支持嵌套 zip、防路径穿越）；经我同意安装 pandas、pytest 并下载数据到 data/raw/
 - 改了：.gitignore、pyproject.toml、requirements-lock.txt、src/rul/__init__.py、src/rul/data.py、scripts/download_data.py、tests/test_data.py、tests/test_download.py、TASKS.md
