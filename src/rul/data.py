@@ -5,9 +5,12 @@ DataFrame，并在读入时校验结构：列数不对或有缺失时立刻报�
 建模阶段才以奇怪的指标表现出来。
 """
 
+from collections.abc import Iterator
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
+from sklearn.model_selection import GroupKFold
 
 # src/rul/data.py -> 项目根目录/data/raw
 DEFAULT_DATA_DIR = Path(__file__).resolve().parents[2] / "data" / "raw"
@@ -67,3 +70,36 @@ def load_rul(
     rul = df[0].astype(int).rename("rul")
     rul.index = pd.RangeIndex(1, len(rul) + 1, name="unit")
     return rul
+
+
+def add_rul(df: pd.DataFrame, cap: int | None = None) -> pd.DataFrame:
+    """返回带 rul 列的副本：RUL = 该发动机最后一个周期 - 当前周期。
+
+    只适用于训练集：训练轨迹一直运行到故障，最后一行才是 RUL = 0。
+    测试轨迹在故障前就截断了，不能这样算。
+
+    cap 是分段线性标签的上限，比如 125：早期健康阶段的信号很弱（见 01_eda
+    第 7 节），都当作同一个 RUL，不要求模型区分。
+    """
+    if cap is not None and cap <= 0:
+        raise ValueError(f"cap 必须为正数，实际 {cap}")
+
+    result = df.copy()
+    result["rul"] = result.groupby("unit")["cycle"].transform("max") - result["cycle"]
+    if cap is not None:
+        result["rul"] = result["rul"].clip(upper=cap)
+    return result
+
+
+def engine_folds(
+    df: pd.DataFrame,
+    n_splits: int = 5,
+    seed: int = 42,
+) -> Iterator[tuple[np.ndarray, np.ndarray]]:
+    """按发动机划分交叉验证折，逐折给出 (训练行位置, 验证行位置)。
+
+    同一台发动机的相邻周期几乎一样。如果按行随机划分，模型等于见过验证
+    发动机，分数会虚高。按发动机划分才能模拟“预测一台没见过的发动机”。
+    """
+    splitter = GroupKFold(n_splits=n_splits, shuffle=True, random_state=seed)
+    yield from splitter.split(df, groups=df["unit"])

@@ -2,6 +2,13 @@
 
 > 进度日志。新的写在最上面；只追加，不删改旧记录。
 
+## 2026-11-05 20:43 · T-004 · 完成
+- 做了：data.py 增加 add_rul（支持截顶）和 engine_folds（按发动机的 GroupKFold，种子固定）；新增 metrics.py（rmse、官方 nasa_score）；01_eda 改用共用的 add_rul，去掉重复逻辑；安装 scikit-learn（scipy 随之装上）
+- 改了：src/rul/data.py、src/rul/metrics.py、tests/test_metrics.py、tests/test_labels_and_folds.py、notebooks/01_eda.ipynb、pyproject.toml、requirements-lock.txt、TASKS.md
+- 验证：pytest 29 个全过，覆盖切分无交集、每台发动机只验证一次、种子可复现、RUL 倒数到 0、截顶、评分函数手算样例（2(e-1)、e^2-1、e^(20/13)-1）；01_eda 重新从头跑通
+- 问题：无
+- 下一步：T-005 线性回归基线
+
 ## 2026-11-05 20:39 · T-003 · 完成
 - 做了：写 notebooks/01_eda.ipynb（传感器含义表、恒定特征、每台发动机内部的相关、趋势小图、Nc/NRc 方向分析、退化指标和截顶依据、结论表）；经我同意装 matplotlib、jupyterlab；填好 AGENTS.md 第 1、2 节（已在 a088e21 提交）
 - 改了：notebooks/01_eda.ipynb、pyproject.toml、requirements-lock.txt、TASKS.md
