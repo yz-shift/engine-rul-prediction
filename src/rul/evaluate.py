@@ -41,7 +41,8 @@ def fold_metrics(truth: np.ndarray, predictions: np.ndarray) -> dict[str, float]
     return {
         "rmse_near_failure": rmse(truth[near], predictions[near]),
         "rmse_all_cycles": rmse(truth, predictions),
-        # 官方分数是求和，和样本数有关。换算成每 100 个预测才能和测试集比较。
+        # 官方分数是求和，和样本数有关，这里换算成每 100 个预测。
+        # 注意它只统计 RUL <= 125，而测试集的 score 是全部发动机的总分，两者不能直接比较。
         "score_per_100": nasa_score(truth[near], predictions[near]) / near.sum() * 100,
     }
 
@@ -123,8 +124,9 @@ def evaluate_on_test(
 ) -> dict[str, float]:
     """官方测试集评估：每台发动机只用最后一个周期预测。
 
-    rmse 和 score 是官方口径（全部发动机）。rmse_near_failure 只算真实 RUL <= 125
-    的发动机，和交叉验证的主要指标口径一致，两者才能直接比较。
+    rmse 和 score 是官方口径（全部发动机）。rmse_near_failure 只算真实 RUL <= 125 的
+    发动机，RUL 范围和交叉验证的主要指标相同，可以作为参考对照。但两者不是同分布：
+    CV 统计每台发动机的全部 RUL 0..125 周期，测试集每台只有最后一个周期。
     """
     last_rows = test_table.sort_values("cycle").groupby("unit").tail(1).sort_values("unit")
     predictions = predict_rul(model, last_rows[feature_columns])

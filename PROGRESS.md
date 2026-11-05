@@ -2,6 +2,13 @@
 
 > 进度日志。新的写在最上面；只追加，不删改旧记录。
 
+## 2026-11-06 03:40 · T-012 · 进行中
+- 做了：Codex 第二轮复审没有严重问题，有 1 项中等、3 项低严重度问题，全部采纳并修复：回退到权重 1 时记录真正返回模型的成绩；搜索记录的参数不再取整；补外层最终拟合的泄漏测试；窗口和参数分开断言；改掉“可以直接比较”的说法
+- 改了：src/rul/tuning.py、evaluate.py、scripts/tune_models.py、tests/test_tuning.py、tests/test_alerts_and_results.py、docs/review/codex_round2.md、TASKS.md
+- 验证：pytest 116 个全过；手工把外层 fit_final 改成用全部数据，新测试会失败，已还原。results/ 还没重跑，下一步在干净副本重跑后对比
+- 问题：窗口测试原来的合成数据是纯线性的，窗口长度对结果没有影响，已加噪声，这也说明旧断言确实太弱。Codex 说所有外折都选权重 5 不准确，FD004 第 3 折回退了，已写进评审记录，不影响嵌套 CV 数字
+- 下一步：Codex 第三轮确认；干净副本重跑；T-013
+
 ## 2026-11-06 02:45 · T-012 · 进行中
 - 做了：修复 Codex 第一轮意见并重跑全流程。嵌套 CV 现在包住特征集、参数和权重的全部选择；模型配置不再取整；权重规则改为先筛选再选最低分；新增按发动机的预警指标；界面不再给 z 分数标物理单位。删除 scripts/tune_asymmetric.py（已问过），合并进 tune_models.py
 - 改了：src/rul/tuning.py、asymmetric.py、alerts.py、results.py、experiments.py、evaluate.py、scripts/tune_models.py、train_models.py、app/streamlit_app.py、tests/、results/*/tuning.json、final.json、docs/review/codex_round1.md

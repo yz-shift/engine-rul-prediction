@@ -48,7 +48,7 @@ class Configuration:
         return dict(self.model_params)
 
     def as_dict(self) -> dict:
-        return {"window": self.window, "cap": self.cap, **self.params()}
+        return {"window": self.window, "cap": self.cap, "model_params": self.params()}
 
 
 @dataclass
@@ -60,6 +60,7 @@ class Selection:
     late_weight: float
     configurations: list[dict]  # 每个候选配置的 CV 指标
     weights: list[dict]  # 每个权重的 CV 指标
+    selected_cv: dict  # experiment 自己的 CV 指标
 
 
 def default_configuration() -> Configuration:
@@ -169,8 +170,19 @@ def select_pipeline(
         weights.append({"late_weight": late_weight, **folds.mean().to_dict()})
     late_weight = choose_late_weight(weights)
 
-    experiment = symmetric if late_weight == 1 else _asymmetric_experiment(symmetric, late_weight)
-    return Selection(experiment, symmetric, late_weight, records, weights)
+    # 权重表都用同一个包装器训练，比较才公平；但不用不对称损失时返回的是普通 LightGBM，
+    # 两者在列抽样下不完全相同，所以这里记录真正返回的模型自己的 CV 指标。
+    if late_weight == 1:
+        experiment = symmetric
+        selected_cv = cross_validate_experiment(symmetric, train, n_splits, seed).mean().to_dict()
+    else:
+        experiment = _asymmetric_experiment(symmetric, late_weight)
+        selected_cv = next(
+            {k: v for k, v in row.items() if k != "late_weight"}
+            for row in weights
+            if row["late_weight"] == late_weight
+        )
+    return Selection(experiment, symmetric, late_weight, records, weights, selected_cv)
 
 
 def _asymmetric_experiment(symmetric: Experiment, late_weight: float) -> Experiment:

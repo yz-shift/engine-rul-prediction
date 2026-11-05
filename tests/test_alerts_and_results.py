@@ -2,6 +2,7 @@
 
 import json
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -9,6 +10,7 @@ from rul.alerts import alert_table
 from rul.evaluate import cross_validate_experiment, out_of_fold_predictions
 from rul.experiments import Experiment, best_experiment, build_featurizer, fit_final
 from rul.results import rounded, write_json
+from rul.tuning import Configuration
 
 
 @pytest.fixture
@@ -62,6 +64,13 @@ def test_metrics_are_rounded_but_configurations_stay_exact():
     assert result["nested"]["chosen_per_fold"][0]["subsample"] == 0.712612345
 
 
+def test_search_records_keep_exact_parameters():
+    configuration = Configuration(50, 125, (("learning_rate", 0.017123456789),))
+    record = rounded({"features": "window", **configuration.as_dict(), "rmse_near_failure": 11.123456})
+    assert record["model_params"]["learning_rate"] == 0.017123456789
+    assert record["rmse_near_failure"] == 11.1235
+
+
 def test_saved_configuration_round_trips_exactly(tmp_path):
     params = {"learning_rate": 0.017123456789012345, "num_leaves": 63, "late_weight": 1.5}
     (tmp_path / "FD001").mkdir()
@@ -85,9 +94,11 @@ def test_saved_configuration_round_trips_exactly(tmp_path):
 
 @pytest.fixture
 def fleet():
+    # 加噪声：纯线性的读数下，窗口长度不影响树的切分，测不出窗口有没有传进去
+    rng = np.random.default_rng(0)
     rows = [
         {"unit": unit, "cycle": cycle, "setting_1": 0.0, "setting_2": 0.0, "setting_3": 100.0,
-         **{f"sensor_{i}": (cycle - 25 - unit) * i * 0.1 for i in range(1, 22)}}
+         **{f"sensor_{i}": (cycle - 25 - unit) * i * 0.1 + rng.normal(scale=2.0) for i in range(1, 22)}}
         for unit in range(1, 11)
         for cycle in range(1, 26 + unit)
     ]
@@ -106,11 +117,14 @@ def test_custom_window_and_parameters_reach_cv_and_final_training(fleet):
     assert fitted.model.named_steps["model"].n_estimators == 5
     assert fitted.featurizer.window == 7
 
-    custom = cross_validate_experiment(experiment, fleet, n_splits=2)
-    default = cross_validate_experiment(
-        Experiment("lightgbm", "window", 125), fleet, n_splits=2
-    )
-    assert not custom.equals(default)  # 如果 CV 忽略配置，两者会完全一样
+    # 只改一项和基准比较：如果 CV 忽略了这一项，结果会和基准完全一样
+    def cv(**changes):
+        base = dict(window=30, model_params=params)
+        return cross_validate_experiment(Experiment("lightgbm", "window", 125, **{**base, **changes}), fleet, n_splits=2)
+
+    baseline = cv()
+    assert not cv(window=7).equals(baseline)
+    assert not cv(model_params=(("n_estimators", 20), ("num_leaves", 3), ("min_child_samples", 2))).equals(baseline)
 
 
 def test_out_of_fold_predictions_cover_every_row_with_true_rul(fleet):

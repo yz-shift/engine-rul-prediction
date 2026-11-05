@@ -64,7 +64,6 @@ def run_subset(subset: str) -> None:
 
     # 在全部训练发动机上再跑一次同样的流程，得到最终模型
     selection = select_pipeline(train, subset, OUTER_SPLITS, OUTER_SEED)
-    chosen_row = next(r for r in selection.weights if r["late_weight"] == selection.late_weight)
     print(f"{subset} 最终选择完成：{selection.experiment.name}", flush=True)
 
     nested_summary = {
@@ -85,7 +84,7 @@ def run_subset(subset: str) -> None:
         "tag": selection.experiment.tag,
         "late_weight": selection.late_weight,
         "nested_cv": nested_summary,
-        "selection_cv_optimistic": {k: v for k, v in chosen_row.items() if k != "late_weight"},
+        "selection_cv_optimistic": selection.selected_cv,
         "test": test_final,
         "alerts_nested": alert_table(nested_predictions),
     }

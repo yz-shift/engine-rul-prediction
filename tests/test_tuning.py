@@ -5,6 +5,7 @@ import pandas as pd
 import pytest
 
 from rul import tuning
+from rul.evaluate import cross_validate_experiment
 from rul.models import build_model
 from rul.tuning import (
     Configuration,
@@ -114,6 +115,35 @@ def test_selected_weight_is_part_of_the_final_experiment(trajectories, small_sea
     selection = select_pipeline(trajectories, "FD001", 3, 42)
     assert selection.experiment == selection.symmetric
     assert selection.experiment.model == "lightgbm"
+    # 记录的是真正返回的普通 LightGBM 的成绩，不是权重表里包装器的成绩
+    own = cross_validate_experiment(selection.symmetric, trajectories, 3, 42).mean()
+    assert selection.selected_cv["rmse_near_failure"] == pytest.approx(own["rmse_near_failure"])
+
+
+def test_selected_cv_is_the_chosen_weight_row(trajectories, small_search, monkeypatch):
+    monkeypatch.setattr(tuning, "choose_late_weight", lambda table: 2)
+    selection = select_pipeline(trajectories, "FD001", 3, 42)
+    row = next(r for r in selection.weights if r["late_weight"] == 2)
+    assert selection.selected_cv == {k: v for k, v in row.items() if k != "late_weight"}
+
+
+def test_nested_cv_final_fit_never_sees_held_out_engines(trajectories, small_search, monkeypatch):
+    fitted_on = []
+    original = tuning.fit_final
+
+    def spy(experiment, train):
+        fitted_on.append(set(train["unit"]))
+        return original(experiment, train)
+
+    monkeypatch.setattr(tuning, "fit_final", spy)
+    monkeypatch.setattr(tuning, "OUTER_SPLITS", 3)
+
+    _, predictions = nested_cross_validate(trajectories, "FD001")
+
+    assert len(fitted_on) == 3
+    held_out = [set(range(1, 16)) - units for units in fitted_on]
+    assert all(len(units) == 5 for units in held_out)  # 外层最终模型只用外层训练发动机
+    assert set().union(*held_out) == set(predictions["unit"])
 
 
 def test_nested_cv_never_selects_anything_on_held_out_engines(trajectories, small_search, monkeypatch):
