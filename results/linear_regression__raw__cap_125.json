@@ -27,49 +27,49 @@
     "sensor_21"
   ],
   "cv_mean": {
-    "rmse_near_failure": 21.175975557779914,
-    "rmse_all_cycles": 51.75925749652994,
-    "score_per_100": 1183.5704530364414
+    "rmse_near_failure": 21.176,
+    "rmse_all_cycles": 51.7593,
+    "score_per_100": 1183.5705
   },
   "cv_std": {
-    "rmse_near_failure": 1.7325614826397118,
-    "rmse_all_cycles": 5.0759982078779995,
-    "score_per_100": 486.1337598680839
+    "rmse_near_failure": 1.7326,
+    "rmse_all_cycles": 5.076,
+    "score_per_100": 486.1338
   },
   "cv_folds": [
     {
       "fold": 0,
-      "rmse_near_failure": 19.453790754585775,
-      "rmse_all_cycles": 46.084239713211225,
-      "score_per_100": 781.2193583825077
+      "rmse_near_failure": 19.4538,
+      "rmse_all_cycles": 46.0842,
+      "score_per_100": 781.2194
     },
     {
       "fold": 1,
-      "rmse_near_failure": 19.238512363310946,
-      "rmse_all_cycles": 58.288018060024555,
-      "score_per_100": 619.9693845355913
+      "rmse_near_failure": 19.2385,
+      "rmse_all_cycles": 58.288,
+      "score_per_100": 619.9694
     },
     {
       "fold": 2,
-      "rmse_near_failure": 22.786241101262465,
-      "rmse_all_cycles": 47.353301602412984,
-      "score_per_100": 1771.591431254993
+      "rmse_near_failure": 22.7862,
+      "rmse_all_cycles": 47.3533,
+      "score_per_100": 1771.5914
     },
     {
       "fold": 3,
-      "rmse_near_failure": 21.655481634690283,
-      "rmse_all_cycles": 52.41488791703768,
-      "score_per_100": 1216.6724816888832
+      "rmse_near_failure": 21.6555,
+      "rmse_all_cycles": 52.4149,
+      "score_per_100": 1216.6725
     },
     {
       "fold": 4,
-      "rmse_near_failure": 22.745851935050112,
-      "rmse_all_cycles": 54.65584018996325,
-      "score_per_100": 1528.3996093202327
+      "rmse_near_failure": 22.7459,
+      "rmse_all_cycles": 54.6558,
+      "score_per_100": 1528.3996
     }
   ],
   "test": {
-    "rmse": 21.900213406891666,
-    "score": 1313.9866350564146
+    "rmse": 21.9002,
+    "score": 1313.9866
   }
 }

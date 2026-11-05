@@ -8,17 +8,29 @@
 
 import json
 from dataclasses import asdict
-from pathlib import Path
 
 import pandas as pd
 
 from rul.data import load_rul, load_trajectories
 from rul.evaluate import cross_validate, evaluate_on_test
-from rul.experiments import EXPERIMENTS, Experiment, fit_final, prepare_table
+from rul.experiments import EXPERIMENTS, RESULTS_DIR, Experiment, fit_final, prepare_table
 from rul.models import SEED, build_model
 
-RESULTS_DIR = Path(__file__).resolve().parents[1] / "results"
 SUBSET = "FD001"
+# 随机森林多线程汇总预测时，浮点数相加的顺序不固定，第 13 位小数之后会有抖动。
+# 保留 4 位小数已远超指标的实际精度，也让结果文件每次运行都完全一致。
+DECIMALS = 4
+
+
+def _rounded(value):
+    """递归把结果里的浮点数四舍五入。"""
+    if isinstance(value, float):
+        return round(value, DECIMALS)
+    if isinstance(value, dict):
+        return {k: _rounded(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_rounded(v) for v in value]
+    return value
 
 
 def run(experiment: Experiment, train: pd.DataFrame, test: pd.DataFrame, true_rul: pd.Series) -> dict:
@@ -70,7 +82,7 @@ def main() -> None:
     for experiment in EXPERIMENTS:
         result = run(experiment, train, test, true_rul)
         path = RESULTS_DIR / f"{experiment.name}.json"
-        path.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        path.write_text(json.dumps(_rounded(result), indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
         results.append(result)
         print(f"完成 {experiment.name}", flush=True)
 

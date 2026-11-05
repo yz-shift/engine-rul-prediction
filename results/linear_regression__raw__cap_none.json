@@ -27,49 +27,49 @@
     "sensor_21"
   ],
   "cv_mean": {
-    "rmse_near_failure": 33.982855585341454,
-    "rmse_all_cycles": 44.11179690788197,
-    "score_per_100": 16794.304002953915
+    "rmse_near_failure": 33.9829,
+    "rmse_all_cycles": 44.1118,
+    "score_per_100": 16794.304
   },
   "cv_std": {
-    "rmse_near_failure": 4.761590465776906,
-    "rmse_all_cycles": 3.9003948572169134,
-    "score_per_100": 12575.461568068062
+    "rmse_near_failure": 4.7616,
+    "rmse_all_cycles": 3.9004,
+    "score_per_100": 12575.4616
   },
   "cv_folds": [
     {
       "fold": 0,
-      "rmse_near_failure": 31.11826284660582,
-      "rmse_all_cycles": 37.555468139611044,
-      "score_per_100": 8140.91934491817
+      "rmse_near_failure": 31.1183,
+      "rmse_all_cycles": 37.5555,
+      "score_per_100": 8140.9193
     },
     {
       "fold": 1,
-      "rmse_near_failure": 27.276952978637837,
-      "rmse_all_cycles": 47.57039207354442,
-      "score_per_100": 3991.2550034965334
+      "rmse_near_failure": 27.277,
+      "rmse_all_cycles": 47.5704,
+      "score_per_100": 3991.255
     },
     {
       "fold": 2,
-      "rmse_near_failure": 39.2953483598304,
-      "rmse_all_cycles": 43.8829410291909,
-      "score_per_100": 36045.571501729486
+      "rmse_near_failure": 39.2953,
+      "rmse_all_cycles": 43.8829,
+      "score_per_100": 36045.5715
     },
     {
       "fold": 3,
-      "rmse_near_failure": 35.774157818706676,
-      "rmse_all_cycles": 45.37539243070781,
-      "score_per_100": 14677.638282188429
+      "rmse_near_failure": 35.7742,
+      "rmse_all_cycles": 45.3754,
+      "score_per_100": 14677.6383
     },
     {
       "fold": 4,
-      "rmse_near_failure": 36.449555922926535,
-      "rmse_all_cycles": 46.17479086635567,
-      "score_per_100": 21116.135882436945
+      "rmse_near_failure": 36.4496,
+      "rmse_all_cycles": 46.1748,
+      "score_per_100": 21116.1359
     }
   ],
   "test": {
-    "rmse": 31.90265040590157,
-    "score": 13220.74092931547
+    "rmse": 31.9027,
+    "score": 13220.7409
   }
 }

@@ -2,6 +2,13 @@
 
 > 进度日志。新的写在最上面；只追加，不删改旧记录。
 
+## 2026-11-05 21:12 · T-006 · 完成
+- 做了：新增 features.py（窗口 30 的均值、标准差、斜率，只看过去、不跨发动机）；models.py 加随机森林和 LightGBM（参数事先定好，没有搜索）；跑 14 组实验（含 Nc/NRc 和全部列两组特征对照）；写 notebooks/02_modeling.ipynb（对比表、配对比较、种子波动、测试集误差、预警提前量、特征重要性）。按 CV 选出 LightGBM + 窗口 + 截顶 125：CV 14.04 ± 0.82，测试 RMSE 14.57、分数 308.7；基线是 21.90、1314
+- 改了：src/rul/features.py、src/rul/models.py、src/rul/experiments.py、scripts/train_models.py、tests/test_features.py、tests/test_experiments.py、notebooks/02_modeling.ipynb、results/、pyproject.toml、requirements-lock.txt、TASKS.md
+- 验证：pytest 全部通过（含真实数据上窗口特征恰好 56 列）；实验连续跑两遍，results/ 差异 0 行；notebook 从头跑通；图表和结论数字已对照输出
+- 问题：(1) 恒定传感器的斜率因浮点误差变成 1e-14 级噪声，骗过了方差筛选，已通过先减首个读数修复并加测试。修复后 LightGBM 的 CV 从 13.83 变为 14.04，也就是说修复没有提升分数，反而略差，但这些列确实是噪声，所以保留修复。(2) 随机森林多线程预测有 1e-13 级抖动，结果文件保留 4 位小数后逐字节一致。第一次加四舍五入的脚本修改没有生效（后台运行没看到报错），是用 diff 发现后才补上的。(3) 随机森林测试集略好于 LightGBM（14.44 对 14.57），按规则仍按 CV 选 LightGBM，两者实际打平
+- 下一步：T-007 Streamlit
+
 ## 2026-11-05 20:48 · T-005 · 完成
 - 做了：新增 models.py（Pipeline：方差筛选 + 标准化 + 线性回归）、evaluate.py（交叉验证、官方测试评估）、experiments.py（实验配置，训练脚本、notebook、界面共用）、scripts/train_models.py（指标写入 results/）。两种标签的基线结果：截顶 125 为 CV 临近故障 RMSE 21.18 ± 1.73、官方测试 RMSE 21.90、分数 1314；不截顶为 CV 33.98 ± 4.76、官方测试 RMSE 31.90、分数 13221
 - 改了：src/rul/models.py、src/rul/evaluate.py、src/rul/experiments.py、scripts/train_models.py、tests/test_evaluate.py、results/、TASKS.md
