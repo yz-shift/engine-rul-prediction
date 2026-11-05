@@ -2,6 +2,13 @@
 
 > 进度日志。新的写在最上面；只追加，不删改旧记录。
 
+## 2026-11-05 23:51 · T-010 · 完成
+- 做了：新增 tuning.py（随机搜索 20 组、嵌套 CV：外层 5 折、内层 3 折）和 scripts/tune_models.py；搜索窗口长度和 7 个 LightGBM 参数，截顶固定 125；另外报告不同截顶的 CV 取舍。嵌套 CV 相比默认：FD001 14.04 到 11.94，FD002 16.46 到 13.90，FD003 14.16 到 12.75，FD004 16.55 到 14.62，都是 5/5 折更好。官方测试 RMSE：FD001 14.57 到 13.20，FD002 26.51 到 24.42，FD003 15.39 到 14.62，FD004 26.60 到 25.43
+- 改了：src/rul/tuning.py、scripts/tune_models.py、tests/test_tuning.py、results/*/tuning.json、TASKS.md
+- 验证：pytest 全过，有测试确认外层留出的发动机不参与选参数；结果写入 results/*/tuning.json
+- 问题：第一版把截顶也放进搜索，所有子集都选中截顶 100，CV 大幅变好（FD001 11.69），官方测试 RMSE 却变差（FD001 16.98、FD002 31.55）。原因是选参指标只统计 RUL <= 125，看不到 125 以上的误差，一定偏向低截顶。这是看到测试结果后才发现的，已如实记录；修正是截顶固定 125（方案已确认的值），不再由这个指标决定。局限：几乎所有折都选中窗口 50，这是搜索范围的上限，更长窗口可能更好，没有测试
+- 下一步：T-011 不对称损失
+
 ## 2026-11-05 22:55 · T-009 · 完成
 - 做了：重构特征流程，改为在每一折内部只用训练发动机拟合（Featurizer）；新增 ConditionNormalizer（KMeans 聚类工况后按工况 z 分数归一化）；实验扩展到四个子集，结果移到 results/<子集>/；界面支持切换子集和 ?subset= 链接；测试集结果增加和 CV 同口径的 rmse_near_failure。最优模型（默认参数）CV 和测试 RMSE：FD001 14.04、14.57；FD002 16.46、26.51；FD003 14.16、15.39；FD004 16.55、26.60
 - 改了：src/rul/features.py、experiments.py、evaluate.py、data.py、models.py、results.py、scripts/train_models.py、app/streamlit_app.py、tests/、results/、TASKS.md
