@@ -2,6 +2,13 @@
 
 > 进度日志。新的写在最上面；只追加，不删改旧记录。
 
+## 2026-11-07 03:24 · T-015 · 完成
+- 做了：加 MIT 许可证（版权人写 GitHub 用户名 yz-shift）；两份 README 的数据许可证一行改名为“数据许可证”，新增“代码许可证”一行，写明不包括 C-MAPSS 数据；AGENTS.md 的“重跑全部实验”补上第二步 tune_models.py（已获同意）
+- 改了：LICENSE、README.md、README.zh-CN.md、AGENTS.md、TASKS.md
+- 验证：逐条对照验收；LICENSE 是标准 MIT 全文；README 链接指向的 LICENSE 存在。pytest 116 个全过
+- 问题：T-014 的日志写“还没 push”，实际 615e221 已经在远程，和本地一致。pyproject.toml 没加 license 字段，避免和旧版 setuptools 的写法不兼容，GitHub 识别 LICENSE 文件就够了
+- 下一步：等我决定 push；新会话做面试演练 T-999
+
 ## 2026-11-06 23:11 · T-014 · 完成
 - 做了：README 翻译成英文作为 README.md，原中文版改名为 README.zh-CN.md（git mv，内容不变，只在顶部加了英文版链接），两份互相链接。英文版注明界面和 Codex 评审原文是中文
 - 改了：README.md（新英文版）、README.zh-CN.md（原 README.md 改名）、TASKS.md

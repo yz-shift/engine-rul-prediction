@@ -227,7 +227,8 @@ python -m venv .venv
 - **数据集**：Turbofan Engine Degradation Simulation Data Set（C-MAPSS），NASA Ames Prognostics Data Repository。
 - **论文**：A. Saxena, K. Goebel, D. Simon, N. Eklund, “Damage Propagation Modeling for Aircraft Engine Run-to-Failure Simulation”, PHM 2008（压缩包内的 readme 也引用这篇论文）。
 - **下载**：`scripts/download_data.py` 从 `phm-datasets.s3.amazonaws.com` 下载约 12.4 MB 的压缩包，解压到 `data/raw/`。原始数据不进 git。
-- **许可证**：data.gov 上 NASA C-MAPSS 相关条目的记录没有给出明确的许可证条款，我也没能打开 NASA 数据仓库的原始页面核对。因此本仓库不分发数据，只提供下载脚本并注明出处。如果要把数据用于研究以外的用途，请先自行向 NASA 确认。
+- **数据许可证**：data.gov 上 NASA C-MAPSS 相关条目的记录没有给出明确的许可证条款，我也没能打开 NASA 数据仓库的原始页面核对。因此本仓库不分发数据，只提供下载脚本并注明出处。如果要把数据用于研究以外的用途，请先自行向 NASA 确认。
+- **代码许可证**：本仓库的代码使用 [MIT 许可证](LICENSE)，不包括 C-MAPSS 数据。
 - **数据说明**：压缩包 readme 写 FD004 训练 248 台、测试 249 台，实际文件是训练 249 台、测试 248 台（RUL 也是 248 行）。这里以实际文件为准。
 
 **未核对原文的部分**：传感器名称表来自转引 Saxena 2008 的论文（arXiv 2605.02507、2503.07854），评分函数来自 C-MAPSS 文献的通行定义，这两处都没有直接对照论文原文。

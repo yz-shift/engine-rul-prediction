@@ -17,7 +17,7 @@
 | 安装依赖 | `.venv/Scripts/python -m pip install -e ".[dev]"` |
 | 下载数据 | `.venv/Scripts/python scripts/download_data.py` |
 | 运行 | `.venv/Scripts/python -m streamlit run app/streamlit_app.py` |
-| 重跑全部实验 | `.venv/Scripts/python -X utf8 scripts/train_models.py` |
+| 重跑全部实验 | 按顺序跑两步：`.venv/Scripts/python -X utf8 scripts/train_models.py`，然后 `.venv/Scripts/python -X utf8 scripts/tune_models.py`（第二步 2 个多小时） |
 | 测试 | `.venv/Scripts/python -X utf8 -m pytest -q` |
 
 表里没填的命令不要猜，先问我。

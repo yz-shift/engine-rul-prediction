@@ -227,7 +227,8 @@ A local Codex instance reviewed the project in three rounds. The reviews and how
 - **Dataset**: Turbofan Engine Degradation Simulation Data Set (C-MAPSS), NASA Ames Prognostics Data Repository.
 - **Paper**: A. Saxena, K. Goebel, D. Simon, N. Eklund, "Damage Propagation Modeling for Aircraft Engine Run-to-Failure Simulation", PHM 2008 (the readme inside the zip also cites this paper).
 - **Download**: `scripts/download_data.py` downloads a zip of about 12.4 MB from `phm-datasets.s3.amazonaws.com` and extracts it to `data/raw/`. Raw data is not committed to git.
-- **Licence**: the data.gov records for NASA C-MAPSS do not state clear licence terms, and I could not open the original NASA repository page to check. So this repository does not distribute the data; it only provides a download script and cites the source. If you want to use the data for anything beyond research, please confirm with NASA yourself.
+- **Data licence**: the data.gov records for NASA C-MAPSS do not state clear licence terms, and I could not open the original NASA repository page to check. So this repository does not distribute the data; it only provides a download script and cites the source. If you want to use the data for anything beyond research, please confirm with NASA yourself.
+- **Code licence**: the code in this repository is released under the [MIT licence](LICENSE). It does not cover the C-MAPSS data.
 - **Data note**: the readme in the zip says FD004 has 248 training and 249 test engines, but the actual files have 249 training and 248 test engines (and 248 RUL rows). This project follows the actual files.
 
 **Not checked against the original source**: the sensor name table comes from papers that cite Saxena 2008 (arXiv 2605.02507, 2503.07854), and the scoring function uses the definition commonly given in the C-MAPSS literature. Neither was checked directly against the original paper.
