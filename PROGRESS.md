@@ -2,6 +2,13 @@
 
 > 进度日志。新的写在最上面；只追加，不删改旧记录。
 
+## 2026-11-06 23:11 · T-014 · 完成
+- 做了：README 翻译成英文作为 README.md，原中文版改名为 README.zh-CN.md（git mv，内容不变，只在顶部加了英文版链接），两份互相链接。英文版注明界面和 Codex 评审原文是中文
+- 改了：README.md（新英文版）、README.zh-CN.md（原 README.md 改名）、TASKS.md
+- 验证：脚本对比两份 README 里出现的全部数字，完全一致；8 个相对链接指向的文件都存在；5 张表每行列数一致。pytest 116 个全过
+- 问题：英文版没有在 GitHub 上实际渲染看过（还没 push）。Streamlit 界面仍是中文，已写进"待定"
+- 下一步：等我决定 push
+
 ## 2026-11-06 05:32 · T-013 · 完成
 - 做了：README 按四个子集、嵌套 CV、权重取舍和预警结果重写；重建 notebooks/02_modeling.ipynb，新增 notebooks/03_extensions.ipynb 并从头执行；重拍界面截图；用干净副本从建环境到两步实验全部重跑一遍，把新格式的 tuning.json 同步进仓库
 - 改了：README.md、notebooks/02_modeling.ipynb、notebooks/03_extensions.ipynb、docs/app_alert.png、docs/app_healthy.png、results/FD00{1,2,3,4}/tuning.json、TASKS.md
